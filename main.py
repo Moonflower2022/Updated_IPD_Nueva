@@ -14,7 +14,6 @@ from ipd_local.data_analysis import *
 from loguru import logger
 import sys
 import time
-import types
 
 if DEBUG_MODE == True:
     random.seed(0)
@@ -25,17 +24,15 @@ if __name__ == "__main__":
     logger.info("Starting!")
 
     data = get_spreadsheet_data(INPUT_SHEET_NAME, TAB_NAME)
-    strats = get_and_load_functions(data)
-    if INCLUDE_DEFAULTS:
-        strats = all_default_functions + strats
+    imported_strategies = get_and_load_functions(data)
 
-    rounds = ROUNDS
-    if NOISE:
-        blindness = [NOISE_LEVEL, NOISE_LEVEL]
-    else:
-        blindness = [0, 0]
+    all_strategies = (
+        all_default_functions + imported_strategies
+        if INCLUDE_DEFAULTS
+        else imported_strategies
+    )
 
-    raw_data = run_simulation(strats)
+    raw_data = run_simulation(all_strategies, NOISE, ROUNDS, NUM_NOISE_GAMES_TO_AVG)
 
     with open(RAW_OUT_LOCATION, "w") as fp:
         fp.write(json.dumps(raw_data))
@@ -43,7 +40,7 @@ if __name__ == "__main__":
     specs = {
         "Noise": NOISE,
         "Noise Level (if applicable)": NOISE_LEVEL,
-        "Noise Games Played Before Averaging (if applicable)": NOISE_GAMES_TILL_AVG,
+        "Noise Games Played Before Averaging (if applicable)": NUM_NOISE_GAMES_TO_AVG,
         "Number of Rounds": ROUNDS,
         "Points when both rat": POINTS_BOTH_RAT,
         "Points for winner when different": POINTS_DIFFERENT_WINNER,

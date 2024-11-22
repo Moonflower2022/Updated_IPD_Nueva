@@ -2,6 +2,7 @@
 
 import random
 from tqdm import tqdm
+from functools import partial
 
 from .types import *
 from .game_specs import *
@@ -66,10 +67,10 @@ def unpack_functions(
 def get_scores(
     player1_moves: List[bool],
     player2_moves: List[bool],
-    both_rat: int = POINTS_BOTH_RAT,
     both_coop: int = POINTS_BOTH_COOPERATE,
     loser: int = POINTS_DIFFERENT_LOSER,
     winner: int = POINTS_DIFFERENT_WINNER,
+    both_rat: int = POINTS_BOTH_RAT,
 ) -> List[float]:
     """
     Calculates the points each player has given their set of moves.
@@ -88,31 +89,25 @@ def get_scores(
 
     Returns: a 2-element list of the points of player 1 and player 2.
     """
-    # NOTE This should really return a tuple instead of a list.
 
-    # both coop, exploit other, get exploited, both cheat
-    payoffs = [both_coop, winner, loser, both_rat]
+    # both coop, get exploited, exploit other, both cheat
+    payoffs = [both_coop, loser, winner, both_rat]
 
-    player1_score = sum(
-        [
-            payoffs[2 * player1_move + player2_move]
-            for player1_move, player2_move in zip(player1_moves, player2_moves)
-        ]
-    )
-    player2_score = sum(
-        [
-            payoffs[2 * player2_move + player1_move]
-            for player1_move, player2_move in zip(player1_moves, player2_moves)
-        ]
-    )
+    player1_score, player2_score = 0.0, 0.0
+
+    for player1_move, player2_move in zip(player1_moves, player2_moves):
+        player1_score += payoffs[2 * player1_move + player2_move]
+        player2_score += payoffs[2 * player2_move + player1_move]
+
     return (player1_score, player2_score)
 
 
 def play_match(
     bytecode: Tuple[bytes, bytes],
     noise: bool = NOISE,
+    noise_level: float = NOISE_LEVEL,
     rounds: int = ROUNDS,
-    num_games: int = NOISE_GAMES_TILL_AVG,
+    num_noise_games_to_avg: int = NUM_NOISE_GAMES_TO_AVG,
 ) -> Optional[List[float]]:
     """
     Plays a match of Iterated Prisoner's Dilemma between two players.
@@ -120,16 +115,17 @@ def play_match(
     Arguments:
     - `bytecode`: a tuple of the bytecode representations of the two players.
     - `noise`: whether or not noise is enabled.
+    - `noise_level`: chance of miscommunicating (only takes affect if noise is on)
     - `rounds`: the number of rounds for the game.
-    - `num_games`: the number of games to play before averaging results if noise is on.
+    - `noise_games_to_average`: the number of games to play before averaging results if noise is on.
 
-    `noise`, `rounds`, and `num_games` all default to the values specified in `game_specs.py`
+    `noise`, `noise_level`, `rounds`, and `num_games` all default to the values specified in `game_specs.py`
 
     Returns: a 2-element list of their scores.
     """
     player1, player2 = unpack_functions(bytecode)
     games = []
-    for _g in range(num_games if noise else 1):
+    for _ in range(num_noise_games_to_avg if noise else 1):
         player1moves = []
         player2moves = []
         player1percieved = []
@@ -161,12 +157,12 @@ def play_match(
             player2moves.append(player2move)
             player1percieved.append(
                 not player1move
-                if NOISE and random.random < NOISE_LEVEL
+                if NOISE and random.random < noise_level
                 else player1move
             )
             player2percieved.append(
                 not player2move
-                if NOISE and random.random < NOISE_LEVEL
+                if NOISE and random.random < noise_level
                 else player2move
             )
 
@@ -176,19 +172,30 @@ def play_match(
         games.append(get_scores(player1moves, player2moves))
 
     return [
-        sum([g[0] for g in games]) / (num_games if noise else 1),
-        sum([g[1] for g in games]) / (num_games if noise else 1),
+        sum([game[0] for game in games]) / (num_noise_games_to_avg if noise else 1),
+        sum([game[1] for game in games]) / (num_noise_games_to_avg if noise else 1),
     ]
 
+
 def run_simulation(
-    strats: List[Strategy], noise: bool = NOISE
+    strats: List[Strategy],
+    noise: bool = NOISE,
+    noise_level: float = NOISE_LEVEL,
+    rounds: int = ROUNDS,
+    num_noise_games_to_avg: int = NUM_NOISE_GAMES_TO_AVG,
 ) -> Dict[str, Dict[str, List[int]]]:
     """
     Runs the full IPD simulation.
 
-    Takes a list  `strats` of strategies to be run.
-    Optionally, whether noise is on is specified with the `noise` argument. Defaults to value in `game_specs.py`
-    )
+    Arguments:
+    - `strats`: a list of strategies to run in the tournament.
+    - `noise`: whether or not noise is enabled.
+    - `noise_level`: chance of miscommunicating (only takes affect if noise is on)
+    - `rounds`: the number of rounds for the game.
+    - `noise_games_to_average`: the number of games to play before averaging results if noise is on.
+
+    `noise`, `noise_level`, `rounds`, and `num_games` all default to the values specified in `game_specs.py`
+    
     Returns a nested dictionary that maps matchups to results.
     Example:
     ```
@@ -204,20 +211,27 @@ def run_simulation(
                 continue
             matchups.append((p1, p2))
     with multiprocessing.Pool(16) as p:
-        res = list(
+        specified_play_match = partial(
+            play_match,
+            noise=noise,
+            noise_level=noise_level,
+            rounds=rounds,
+            num_noise_games_to_avg=num_noise_games_to_avg,
+        )
+        result = list(
             tqdm(
                 p.imap(  # NOTE imap() may be the source of the slowness...?
-                    play_match,
+                    specified_play_match,
                     [pack_functions(x) for x in matchups],
                 ),
                 total=len(matchups),
             )
         )
     output = defaultdict(dict)
-    for i, x in enumerate(matchups):
-        match_res = res[i]
-        if match_res == None:
+    for i, matchup in enumerate(matchups):
+        match_result = result[i]
+        if match_result == None:
             continue
-        output[x[0].__name__][x[1].__name__] = match_res
-        output[x[1].__name__][x[0].__name__] = list(reversed(match_res))
+        output[matchup[0].__name__][matchup[1].__name__] = match_result
+        output[matchup[1].__name__][matchup[0].__name__] = list(reversed(match_result))
     return output

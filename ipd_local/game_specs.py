@@ -5,19 +5,18 @@ from random import randint
 # simulation specs
 NOISE = False  # whether or not this tournament has noise
 NOISE_LEVEL = 0.1  # percentage noise; only used if NOISE is set to True
+NUM_NOISE_GAMES_TO_AVG = 50  # number of noise games to play and average (only if noise is true)
 
 # Random round range from 100 - 200
 ROUNDS = randint(
     100, 200
 )  # number of rounds each strategy plays against each other strategy
 
-NOISE_GAMES_TILL_AVG = 50  # number of games to play until averaging (if noise is true)
-
 # scores distribution, assuming symmetry
-POINTS_BOTH_RAT = 1  # score for both players if they both rat
-POINTS_DIFFERENT_WINNER = 9  # score for for ratting if opponent stays silent
-POINTS_DIFFERENT_LOSER = 0  # score for staying silent if opponent rats
 POINTS_BOTH_COOPERATE = 5  # score for both players when they cooperate
+POINTS_DIFFERENT_LOSER = 0  # score for staying silent if opponent rats
+POINTS_DIFFERENT_WINNER = 9  # score for for ratting if opponent stays silent
+POINTS_BOTH_RAT = 1  # score for both players if they both rat
 
 # run with default functions (always rat, always silent, tit for tat, etc).
 # all default functions can be found in defaul_functions.py
