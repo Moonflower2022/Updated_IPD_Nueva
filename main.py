@@ -9,7 +9,7 @@ from ipd_local.default_functions import *
 from ipd_local.simulation import *
 from ipd_local.get_inputs import *
 from ipd_local.output_locations import *
-from ipd_local.data_analysis import *
+from ipd_local.output import *
 
 from loguru import logger
 import sys
