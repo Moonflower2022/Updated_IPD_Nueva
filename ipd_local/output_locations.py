@@ -16,4 +16,4 @@ PROBLEMS_LOG_LOCATION = "./ipd.log"
 
 # list of functions that have issues
 # refreshed when simulation is run with RELOAD_BLACKLIST = True --> list of all the functions that we know are faulty
-BLACKLIST = "./blacklist.txt"
+BLACKLIST_LOCATION = "./blacklist.txt"

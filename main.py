@@ -24,7 +24,7 @@ if __name__ == "__main__":
     logger.info("Starting!")
 
     data = get_spreadsheet_data(INPUT_SHEET_NAME, TAB_NAME)
-    imported_strategies = get_and_load_functions(data)
+    imported_strategies = get_and_load_functions(data, cache=False)
 
     all_strategies = (
         all_default_functions + imported_strategies
@@ -32,7 +32,7 @@ if __name__ == "__main__":
         else imported_strategies
     )
 
-    raw_data = run_simulation(all_strategies, NOISE, ROUNDS, NUM_NOISE_GAMES_TO_AVG)
+    raw_data = run_simulation(all_strategies, noise=NOISE, noise_level=NOISE_LEVEL, rounds=ROUNDS, num_noise_games_to_avg=NUM_NOISE_GAMES_TO_AVG)
 
     with open(RAW_OUT_LOCATION, "w") as fp:
         fp.write(json.dumps(raw_data))

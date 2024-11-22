@@ -11,10 +11,11 @@ from .game_specs import *
 # returns pairwise scores for all functions as a pandas dataframe.
 # column is first function, row is second function.
 def get_pairwise():
-    with open(RAW_OUT_LOCATION, "r") as fp:
-        clean_data = json.loads(fp.read())
+    with open(RAW_OUT_LOCATION, "r") as raw_out_file:
+        clean_data = json.loads(raw_out_file.read())
     pairwise = pd.DataFrame.from_dict(clean_data)
-    return pairwise
+    adjusted_pairwise = pairwise.applymap(lambda scores: scores[::-1] if isinstance(scores, list) else None)
+    return adjusted_pairwise
 
 
 # returns functions ranked by total score as pandas dataframe
@@ -32,9 +33,9 @@ def get_ranking():
         # retrive scores
         scores = []
         opponent_scores = []
-        for strat2 in clean_data[strategy].keys():
-            scores.append(clean_data[strategy][strat2][1])
-            opponent_scores.append(clean_data[strategy][strat2][0])
+        for opponent_strategy in clean_data[strategy].keys():
+            scores.append(clean_data[strategy][opponent_strategy][0])
+            opponent_scores.append(clean_data[strategy][opponent_strategy][1])
 
         # calculate each metric
         total_points = np.sum(scores)

@@ -11,6 +11,7 @@ NUM_NOISE_GAMES_TO_AVG = 50  # number of noise games to play and average (only i
 ROUNDS = randint(
     100, 200
 )  # number of rounds each strategy plays against each other strategy
+MAXIMUM_NUM_FUNCTIONS = 10
 
 # scores distribution, assuming symmetry
 POINTS_BOTH_COOPERATE = 5  # score for both players when they cooperate
