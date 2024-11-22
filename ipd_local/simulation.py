@@ -41,7 +41,9 @@ def suppress_stdout():
             sys.stdout = old_stdout
 
 
-def pack_functions(functions: Tuple[Callable[..., Any], Callable[..., Any]]) -> Tuple[bytes, bytes]:
+def pack_functions(
+    functions: Tuple[Callable[..., Any], Callable[..., Any]]
+) -> Tuple[bytes, bytes]:
     """Packs a tuple of two functions into a tuple of their bytecode.
     Note:
     - If the function references globals, it will not work!
@@ -50,13 +52,15 @@ def pack_functions(functions: Tuple[Callable[..., Any], Callable[..., Any]]) -> 
     return (marshal.dumps(functions[0].__code__), marshal.dumps(functions[1].__code__))
 
 
-def unpack_functions(bytecodes: Tuple[bytes, bytes]) -> Tuple[Callable[..., Any], Callable[..., Any]]:
+def unpack_functions(
+    bytecodes: Tuple[bytes, bytes]
+) -> Tuple[Callable[..., Any], Callable[..., Any]]:
     """Unpacks a tuple of two bytecode sequences into a tuple of functions.
     Default function names are "p1" and "p2".
     """
     return (
         types.FunctionType(marshal.loads(bytecodes[0]), globals(), "p1"),
-        types.FunctionType(marshal.loads(bytecodes[1]), globals(), "p2")
+        types.FunctionType(marshal.loads(bytecodes[1]), globals(), "p2"),
     )
 
 
@@ -66,7 +70,7 @@ def get_scores(
     both_rat: int = POINTS_BOTH_RAT,
     both_coop: int = POINTS_BOTH_COOPERATE,
     loser: int = POINTS_DIFFERENT_LOSER,
-    winner: int = POINTS_DIFFERENT_WINNER
+    winner: int = POINTS_DIFFERENT_WINNER,
 ) -> List[float]:
     """
     Calculates the points each player has given their set of moves.
@@ -145,7 +149,9 @@ def play_match(
                     player1percieved,
                     i,
                 )
-                if not isinstance(player1move, bool) or not isinstance(player2move, bool):
+                if not isinstance(player1move, bool) or not isinstance(
+                    player2move, bool
+                ):
                     raise Exception("Strategy returned invalid response!")
             except Exception as e:
                 print(f"An error occurred: {e}")
@@ -154,8 +160,16 @@ def play_match(
 
             player1moves.append(player1move)
             player2moves.append(player2move)
-            player1percieved.append(not player1move if NOISE and random.random < NOISE_LEVEL else player1move)
-            player2percieved.append(not player2move if NOISE and random.random < NOISE_LEVEL else player2move)
+            player1percieved.append(
+                not player1move
+                if NOISE and random.random < NOISE_LEVEL
+                else player1move
+            )
+            player2percieved.append(
+                not player2move
+                if NOISE and random.random < NOISE_LEVEL
+                else player2move
+            )
 
         if len(player1moves) != rounds or len(player2moves) != rounds:
             return None
@@ -163,13 +177,19 @@ def play_match(
         games.append(get_scores(player1moves, player2moves))
 
     return [
-        sum([g[0] for g in games])/(num_games if noise else 1),
-        sum([g[1] for g in games])/(num_games if noise else 1),
+        sum([g[0] for g in games]) / (num_games if noise else 1),
+        sum([g[1] for g in games]) / (num_games if noise else 1),
     ]
 
-Strategy = NewType("Strategy", Callable[[List[bool], List[bool], int], bool]) # FIXME redundant def
 
-def run_simulation(strats: List[Strategy], noise: bool = NOISE) -> Dict[str, Dict[str, List[int]]]:
+Strategy = NewType(
+    "Strategy", Callable[[List[bool], List[bool], int], bool]
+)  # FIXME redundant def
+
+
+def run_simulation(
+    strats: List[Strategy], noise: bool = NOISE
+) -> Dict[str, Dict[str, List[int]]]:
     """
     Runs the full IPD simulation.
 
@@ -185,18 +205,23 @@ def run_simulation(strats: List[Strategy], noise: bool = NOISE) -> Dict[str, Dic
     """
     matchups = []
     print(len(strats))
-    for i,p1 in enumerate(strats):
-        for j,p2 in enumerate(strats):
+    for i, p1 in enumerate(strats):
+        for j, p2 in enumerate(strats):
             if j <= i:
                 continue
             matchups.append((p1, p2))
     with multiprocessing.Pool(16) as p:
-        res = list(tqdm(p.imap( # NOTE imap() may be the source of the slowness...?
-            play_match,
-            [pack_functions(x) for x in matchups],
-        ), total=len(matchups)))
+        res = list(
+            tqdm(
+                p.imap(  # NOTE imap() may be the source of the slowness...?
+                    play_match,
+                    [pack_functions(x) for x in matchups],
+                ),
+                total=len(matchups),
+            )
+        )
     output = defaultdict(dict)
-    for i,x in enumerate(matchups):
+    for i, x in enumerate(matchups):
         match_res = res[i]
         if match_res == None:
             continue

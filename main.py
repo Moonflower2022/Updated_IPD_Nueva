@@ -17,13 +17,13 @@ import time
 import types
 
 if DEBUG_MODE == True:
-    random.seed(0) 
+    random.seed(0)
 
 if __name__ == "__main__":
     logger.remove()
     logger.add(PROBLEMS_LOG_LOCATION)
-    logger.info("Starting!")    
-    
+    logger.info("Starting!")
+
     data = get_spreadsheet_data(INPUT_SHEET_NAME, TAB_NAME)
     strats = get_and_load_functions(data)
     if INCLUDE_DEFAULTS:
@@ -33,13 +33,13 @@ if __name__ == "__main__":
     if NOISE:
         blindness = [NOISE_LEVEL, NOISE_LEVEL]
     else:
-        blindness = [0,0]
+        blindness = [0, 0]
 
     raw_data = run_simulation(strats)
-    
-    with open(RAW_OUT_LOCATION, 'w') as fp:
+
+    with open(RAW_OUT_LOCATION, "w") as fp:
         fp.write(json.dumps(raw_data))
-        
+
     specs = {
         "Noise": NOISE,
         "Noise Level (if applicable)": NOISE_LEVEL,
@@ -50,10 +50,8 @@ if __name__ == "__main__":
         "Points for loser when different": POINTS_DIFFERENT_LOSER,
         "Points when both cooperate": POINTS_BOTH_COOPERATE,
         "Debug mode (fixed random seed - should be off)": DEBUG_MODE,
-    }    
-    with open('./latest_specs.json', 'w') as fp:
+    }
+    with open("./latest_specs.json", "w") as fp:
         fp.write(json.dumps(specs))
 
     update_sheet()
-
-

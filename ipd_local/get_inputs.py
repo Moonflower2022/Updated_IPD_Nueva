@@ -1,6 +1,5 @@
 """Submodule for handling inputs. Responsible for spreadsheet fetching, pastebin downloads, function verification/loading."""
 
-
 import gspread
 import requests
 from tqdm import tqdm
@@ -19,6 +18,7 @@ import urllib
 
 Strategy = NewType("Strategy", Callable[[List[bool], List[bool], int], bool])
 
+
 def get_spreadsheet_data(sheet: str, tab: str) -> List[List[str]]:
     """
     Retrieve latest list of submissions from Google Sheet.
@@ -27,7 +27,7 @@ def get_spreadsheet_data(sheet: str, tab: str) -> List[List[str]]:
     Arguments:
     - `sheet`: the name of the spreadsheet to query.
     - `tab`: the tab of the spreadsheet the data is in.
-    
+
     Returns: list of lists containing spreadsheet data in column-row format.
     """
     print("Retrieving spreadsheet data...")
@@ -36,6 +36,7 @@ def get_spreadsheet_data(sheet: str, tab: str) -> List[List[str]]:
     worksheet = spreadsheet.worksheet(tab)
     print("Retrieved spreadsheet data.")
     return worksheet.get_all_values()
+
 
 def get_pastebin(link: str, cache: bool = False) -> Optional[str]:
     """
@@ -55,31 +56,34 @@ def get_pastebin(link: str, cache: bool = False) -> Optional[str]:
     ident = parse.parse("/raw/{}", url.path)
     if ident == None:
         ident = parse.parse("/{}", url.path)
-        if ident == None: 
+        if ident == None:
             return None
 
-    ident = ident[0]    
-    if len(ident) != 8 or not ident.isalnum(): # pastebin IDs are always 8 alphanumeric chars
-        return None    
-    
+    ident = ident[0]
+    if (
+        len(ident) != 8 or not ident.isalnum()
+    ):  # pastebin IDs are always 8 alphanumeric chars
+        return None
+
     if not os.path.exists("./cache"):
         os.mkdir("./cache")
     if cache:
         if os.path.exists(f"./cache/{ident}"):
             return open(f"./cache/{ident}", "r").read()
-        
+
     raw_link = f"https://pastebin.com/raw/{ident}"
     code = requests.get(raw_link).text
-    if not cache: # no need to re-write cache's contents to itself
+    if not cache:  # no need to re-write cache's contents to itself
         open(f"./cache/{ident}", "w").write(code)
     return code
+
 
 def get_and_load_functions(
     data: List[List[str]],
     name_col: int = STUDENT_NAME_COL,
     regular_col: int = REGULAR_STRAT_COL,
     noise_col: int = NOISE_STRAT_COL,
-    noise: bool = NOISE
+    noise: bool = NOISE,
 ) -> List[Strategy]:
     """
     Downloads, loads, and filters all of the python code in the provided pastebin links.
@@ -98,9 +102,9 @@ def get_and_load_functions(
 
     # iterate through all submissions (every student)
     for i in tqdm(range(1, len(data))):
-        if data[i][name_col] in block: 
+        if data[i][name_col] in block:
             with open("successful_block.txt", "w") as f:
-                f.write("Successfully blocked "+str(data[i][name_col]))
+                f.write("Successfully blocked " + str(data[i][name_col]))
             continue
         link = data[i][noise_col if noise else regular_col]
 
@@ -109,12 +113,12 @@ def get_and_load_functions(
         if not (code := get_pastebin(link)):
             logger.error(f"Could not parse pastebin link for {data[i][name_col]}!")
             continue
-        
+
         try:
             exec(code)
         except Exception as e:
             logger.error(f"Failed to execute code: {str(e)}")
-            
+
     # get all the functions that have been loaded without issue
     loaded_functions = [f for f in locals().values() if callable(f)]
 
@@ -122,37 +126,42 @@ def get_and_load_functions(
     good, bad = check_functions_io(loaded_functions)
     loaded_functions = good
 
-    with open(BLACKLIST, 'w') as f: #DON'T KNOW IF THIS WILL WORK, but should check somehow
+    with open(
+        BLACKLIST, "w"
+    ) as f:  # DON'T KNOW IF THIS WILL WORK, but should check somehow
         for error in bad:
             function, e = error
-            f.write("From "+function.__name__+", error: "+str(e)+"\n")
+            f.write("From " + function.__name__ + ", error: " + str(e) + "\n")
 
     print("Removed", len(bad), "functions for bad IO.")
     print("Loaded", len(loaded_functions), " good functions.")
     return loaded_functions
 
-def check_functions_io(functions: List[Strategy]) -> Tuple[List[Strategy], List[Strategy]]:
+
+def check_functions_io(
+    functions: List[Strategy],
+) -> Tuple[List[Strategy], List[Strategy]]:
     """
     Tests a list of functions on sample inputs and outputs to see if they work.
     Functions must take three arguments (their moves, opponent's moves, round number) and return a boolean.
-    
+
     Returns tuple of the good and bad functions (in that order).
     """
     good_functions = []
     bad_functions = []
 
-    test_cases = [
-        [[True] * i, [False] * i, i] for i in range(0, ROUNDS)
-    ]
+    test_cases = [[[True] * i, [False] * i, i] for i in range(0, ROUNDS)]
 
     for function in functions:
         try:
-            with suppress_stdout(): # ignore all printed statements from these functions
+            with suppress_stdout():  # ignore all printed statements from these functions
                 is_bad = False
                 for test_case in test_cases:
-                    output = function(*test_case) # run the function
+                    output = function(*test_case)  # run the function
                     if not isinstance(output, bool):
-                        logger.error(f"Testing I/O of {function.__name__} failed: output was not bool")
+                        logger.error(
+                            f"Testing I/O of {function.__name__} failed: output was not bool"
+                        )
                         bad_functions.append((function, "output was not bool"))
                         is_bad = True
                         break
