@@ -24,7 +24,7 @@ if __name__ == "__main__":
     logger.add(PROBLEMS_LOG_LOCATION)
     logger.info("Starting!")    
     
-    data = get_spreadsheet_data(SHEET_NAME, TAB_NAME)
+    data = get_spreadsheet_data(INPUT_SHEET_NAME, TAB_NAME)
     strats = get_and_load_functions(data)
     if INCLUDE_DEFAULTS:
         strats = all_default_functions + strats

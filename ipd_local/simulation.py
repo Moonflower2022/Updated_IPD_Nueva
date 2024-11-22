@@ -15,13 +15,8 @@ import sys, os
 
 import multiprocessing
 import marshal
-import itertools
 from collections import defaultdict
 
-#dynamic custom game:
-if len(sys.argv)==3:
-    NOISE = sys.argv[1]
-    NOISE_LEVEL = sys.argv[2]
 
 @contextmanager
 def suppress_stdout():
@@ -91,30 +86,30 @@ def get_scores(
     Returns: a 2-element list of the points of player 1 and player 2.
     """
     # NOTE This should really return a tuple instead of a list.
-    results = [0.0,0.0]
-    for i in range(len(player1_moves)):
-        if player1_moves[i]:
-            if player2_moves[i]:
-                results[0]+=both_rat
-                results[1]+=both_rat
-            else:
-                results[0]+=loser
-                results[1]+=winner #THESE WERE SWITCHED IN ANNLI'S CODE
-        else:
-            if player2_moves[i]:
-                results[0]+=winner #THESE WERE SWITCHED IN ANNLI's CODE
-                results[1]+=loser
-            else:
-                results[0]+=both_coop
-                results[1]+=both_coop
-    return results
+
+    # both coop, exploit other, get exploited, both cheat
+    payoffs = [both_coop, winner, loser, both_rat]
+
+    player1_score = sum(
+        [
+            payoffs[2 * player1_move + player2_move]
+            for player1_move, player2_move in zip(player1_moves, player2_moves)
+        ]
+    )
+    player2_score = sum(
+        [
+            payoffs[2 * player2_move + player1_move]
+            for player1_move, player2_move in zip(player1_moves, player2_moves)
+        ]
+    )
+    return (player1_score, player2_score)
 
 
 def play_match(
     bytecode: Tuple[bytes, bytes],
     noise: bool = NOISE,
     rounds: int = ROUNDS,
-    num_games: int = NOISE_GAMES_TILL_AVG
+    num_games: int = NOISE_GAMES_TILL_AVG,
 ) -> Optional[List[float]]:
     """
     Plays a match of Iterated Prisoner's Dilemma between two players.
@@ -134,35 +129,33 @@ def play_match(
     for _g in range(num_games if noise else 1):
         player1moves = []
         player2moves = []
+        player1percieved = []
+        player2percieved = []
 
         for i in range(rounds):
-            # handle perceived moves (for noise)
-            p1_moves = player1moves.copy()
-            p2_moves = player2moves.copy()
-            if noise:
-                if random.random()<NOISE_LEVEL and len(player1moves) > 0:
-                    p1_moves[-1] = not(player1moves[-1])
-                if random.random()<NOISE_LEVEL and len(player2moves) > 0:
-                    p2_moves[-1] = not(player2moves[-1])
-
+            sys.stdout = None
             try:
-                with suppress_stdout():
-                    player1move = player1(p1_moves, p2_moves, i)
-                    if not isinstance(player1move, bool):
-                        raise Exception("Strategy returned invalid response!")
+                player1move = player1(
+                    player1moves,
+                    player2percieved,
+                    i,
+                )
+                player2move = player2(
+                    player2moves,
+                    player1percieved,
+                    i,
+                )
+                if not isinstance(player1move, bool) or not isinstance(player2move, bool):
+                    raise Exception("Strategy returned invalid response!")
             except Exception as e:
+                print(f"An error occurred: {e}")
                 return None
-
-            try:
-                with suppress_stdout():
-                    player2move = player2(p2_moves, p1_moves, i)
-                    if not isinstance(player2move, bool):
-                        raise Exception("Strategy returned invalid response!")                    
-            except Exception as e:
-                return None
+            sys.stdout = sys.__stdout__
 
             player1moves.append(player1move)
             player2moves.append(player2move)
+            player1percieved.append(not player1move if NOISE and random.random < NOISE_LEVEL else player1move)
+            player2percieved.append(not player2move if NOISE and random.random < NOISE_LEVEL else player2move)
 
         if len(player1moves) != rounds or len(player2moves) != rounds:
             return None

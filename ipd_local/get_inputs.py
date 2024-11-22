@@ -141,13 +141,24 @@ def check_functions_io(functions: List[Strategy]) -> Tuple[List[Strategy], List[
     good_functions = []
     bad_functions = []
 
+    test_cases = [
+        [[True] * i, [False] * i, i] for i in range(0, ROUNDS)
+    ]
+
     for function in functions:
         try:
             with suppress_stdout(): # ignore all printed statements from these functions
-                output = function([True]*10,[False]*10,10) # run the function
-                if not isinstance(output, bool):
-                    continue
-                good_functions.append(function)
+                is_bad = False
+                for test_case in test_cases:
+                    output = function(*test_case) # run the function
+                    if not isinstance(output, bool):
+                        logger.error(f"Testing I/O of {function.__name__} failed: output was not bool")
+                        bad_functions.append((function, "output was not bool"))
+                        is_bad = True
+                        break
+
+                if not is_bad:
+                    good_functions.append(function)
         except Exception as e:
             logger.error(f"Testing I/O of {function.__name__} failed: {str(e)}")
             bad_functions.append((function, e))
