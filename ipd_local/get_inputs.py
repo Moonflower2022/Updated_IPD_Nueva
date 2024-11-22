@@ -4,20 +4,17 @@ import gspread
 import requests
 from tqdm import tqdm
 
-from typing import Optional, List, Callable, NewType, Tuple
 import parse
 
 from loguru import logger
 
+from .types import *
 from .game_specs import *
 from .default_functions import *
 from .simulation import *
 from .output_locations import *
 import os
 import urllib
-
-Strategy = NewType("Strategy", Callable[[List[bool], List[bool], int], bool])
-
 
 def get_spreadsheet_data(sheet: str, tab: str) -> List[List[str]]:
     """

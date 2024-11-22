@@ -1,7 +1,6 @@
 import numpy as np
 import pandas as pd
 import json
-import copy
 import gspread
 import gspread_dataframe
 

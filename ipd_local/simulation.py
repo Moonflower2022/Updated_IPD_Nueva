@@ -3,8 +3,7 @@
 import random
 from tqdm import tqdm
 
-from typing import List, Callable, Any, Tuple, NewType, Dict, Optional
-
+from .types import *
 from .game_specs import *
 from .output_locations import *
 import types
@@ -180,12 +179,6 @@ def play_match(
         sum([g[0] for g in games]) / (num_games if noise else 1),
         sum([g[1] for g in games]) / (num_games if noise else 1),
     ]
-
-
-Strategy = NewType(
-    "Strategy", Callable[[List[bool], List[bool], int], bool]
-)  # FIXME redundant def
-
 
 def run_simulation(
     strats: List[Strategy], noise: bool = NOISE
