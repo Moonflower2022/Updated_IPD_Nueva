@@ -1,0 +1,6 @@
+**/__pycache__/**
+cache
+latest_specs.json
+latest_raw_out.json
+service_account.json
+ipd.log
