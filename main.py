@@ -5,7 +5,6 @@ import json
 
 import ipd_local
 from ipd_local.game_specs import *
-from ipd_local.default_functions import *
 from ipd_local.simulation import *
 from ipd_local.get_inputs import *
 from ipd_local.output_locations import *

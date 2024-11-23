@@ -10,7 +10,7 @@ from loguru import logger
 
 from .types import *
 from .game_specs import *
-from .default_functions import *
+from .default_strategies import *
 from .simulation import *
 from .output_locations import *
 from utils import suppress_output
