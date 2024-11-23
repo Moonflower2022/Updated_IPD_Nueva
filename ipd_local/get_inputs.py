@@ -13,6 +13,7 @@ from .game_specs import *
 from .default_functions import *
 from .simulation import *
 from .output_locations import *
+from utils import suppress_output
 import os
 import urllib
 
@@ -133,7 +134,7 @@ def get_and_load_functions(
             logger.error(f"Failed to execute code: {str(error)}")
 
     # get all the functions that have been loaded without issue
-    loaded_functions = [function for function in functions.values()]
+    loaded_functions = [function for function in functions.values() if callable(function)]
 
     # filter for functions that pass basic input/output check
     good_functions, bad_function_pairs = check_functions_io(loaded_functions)
@@ -149,7 +150,7 @@ def get_and_load_functions(
     )
     print(f"Removed {len(bad_function_pairs)} functions for bad IO.")
     print(f"Loaded {len(good_functions)} good functions.")
-    return loaded_functions
+    return good_functions
 
 
 def get_num_functions(code: str):
@@ -172,6 +173,7 @@ def check_functions_io(
 
     Returns tuple of the good and bad functions (in that order).
     """    
+    
     good_functions = []
     bad_function_results = []
 
@@ -179,20 +181,20 @@ def check_functions_io(
 
     for function in functions:
         try:
-            with suppress_stdout():  # ignore all printed statements from these functions
-                is_bad = False
-                for test_case in test_cases:
-                    output = function(*test_case)  # run the function
-                    if not isinstance(output, bool):
-                        logger.error(
-                            f"Testing I/O of {function.__name__} failed: output was not bool"
-                        )
-                        bad_function_results.append((function, "output was not bool"))
-                        is_bad = True
-                        break
+            is_bad = False
+            for test_case in test_cases:
+                with suppress_output():
+                    output = function(*test_case)
+                if not isinstance(output, bool):
+                    logger.error(
+                        f"Testing I/O of {function.__name__} failed: output was not bool"
+                    )
+                    bad_function_results.append((function, "output was not bool"))
+                    is_bad = True
+                    break
 
-                if not is_bad:
-                    good_functions.append(function)
+            if not is_bad:
+                good_functions.append(function)
         except Exception as e:
             logger.error(f"Testing I/O of {function.__name__} failed: {str(e)}")
             bad_function_results.append((function, e))

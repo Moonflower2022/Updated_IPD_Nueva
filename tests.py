@@ -1,22 +1,7 @@
 import unittest
 from ipd_local.simulation import get_scores, pack_functions, play_match, run_simulation
 import marshal
-import sys
-import os
-
-
-class suppress_output:
-    def __enter__(self):
-        self.original_stdout = sys.stdout
-        self.original_stderr = sys.stderr
-        self.null = open(os.devnull, "w")
-        sys.stdout = self.null
-        sys.stderr = self.null  # Redirect stderr as well
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        sys.stdout = self.original_stdout
-        sys.stderr = self.original_stderr
-        self.null.close()
+from utils import suppress_output
 
 
 def cheat(my_moves, other_moves, current_round):

@@ -5,40 +5,15 @@ from tqdm import tqdm
 from functools import partial
 
 from .types import *
+import types
 from .game_specs import *
 from .output_locations import *
-import types
 from loguru import logger
 
-from contextlib import contextmanager
-import sys, os
-
+from utils import suppress_output
 import multiprocessing
 import marshal
 from collections import defaultdict
-
-
-@contextmanager
-def suppress_stdout():
-    """
-    Suppresses any writes to stdout.
-
-    Example:
-    ```py
-    print("Suppressing!")
-    with suppress_stdout():
-        # code to suppress
-        strategy() # will not print anything even if it has print statements
-    print("Back to normal!")
-    ```
-    """
-    with open(os.devnull, "w") as devnull:
-        old_stdout = sys.stdout
-        sys.stdout = devnull
-        try:
-            yield
-        finally:
-            sys.stdout = old_stdout
 
 
 def pack_functions(
@@ -132,18 +107,19 @@ def play_match(
         player2percieved = []
 
         for i in range(rounds):
-            sys.stdout = None
+            
             try:
-                player1move = player1(
-                    player1moves,
-                    player2percieved,
-                    i,
-                )
-                player2move = player2(
-                    player2moves,
-                    player1percieved,
-                    i,
-                )
+                with suppress_output():
+                    player1move = player1(
+                        player1moves,
+                        player2percieved,
+                        i,
+                    )
+                    player2move = player2(
+                        player2moves,
+                        player1percieved,
+                        i,
+                    )
                 if not isinstance(player1move, bool) or not isinstance(
                     player2move, bool
                 ):
@@ -151,7 +127,6 @@ def play_match(
             except Exception as e:
                 print(f"An error occurred: {e}")
                 return None
-            sys.stdout = sys.__stdout__
 
             player1moves.append(player1move)
             player2moves.append(player2move)
