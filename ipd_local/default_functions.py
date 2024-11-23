@@ -4,76 +4,96 @@
 import random
 from .types import *
 
-def rat(mymoves: List[bool], othermoves: List[bool], currentRound: int) -> bool:
-    # Always Rats (returns true)
-    assert len(mymoves) == currentRound
-    assert len(othermoves) == currentRound
 
+def rat(mymoves: List[bool], othermoves: List[bool], currentRound: int) -> bool:
+    # Always Rats (returns True)
     return True
 
 
 def silent(mymoves: List[bool], othermoves: List[bool], currentRound: int) -> bool:
-    # Always stays silent
-    assert len(mymoves) == currentRound
-    assert len(othermoves) == currentRound
-
+    # Always stays silent (returns False)
     return False
 
 
 def rand(mymoves: List[bool], othermoves: List[bool], currentRound: int) -> bool:
-    # Choose completely randomly 50-50
     return bool(random.getrandbits(1))
 
 
-def kindaRandom(mymoves: List[bool], othermoves: List[bool], currentRound: int) -> bool:
-    # Chooses kinda randomly. Change the variable below to tell it how often to rat. For example, if randomness is set to 0.9, this player will rat 90% of the time
-    randomness = 0.9
-
-    randNumber = random.random()
-    if randNumber < randomness:
-        return True
-    return False
+def kinda_random(
+    mymoves: List[bool], othermoves: List[bool], currentRound: int
+) -> bool:
+    cheat_probability = 0.9
+    return random.random() < cheat_probability
 
 
-def titForTat(mymoves: List[bool], othermoves: List[bool], currentRound: int) -> bool:
-    # Stays silent until the other player rats. If the other player's last move is rat this player only rats for this round.
+def tit_for_tat(mymoves: List[bool], othermoves: List[bool], currentRound: int) -> bool:
     if len(othermoves) == 0:
         return False
     return othermoves[-1]
 
 
-def titForTwoTats(mymoves: List[bool], othermoves: List[bool], currentRound: int) -> bool:
-    # Stays silent until the other player rats twice in a row. If the other player's last 2 moves is rat this player only rats for this round.
+def tit_for_two_tats(
+    mymoves: List[bool], othermoves: List[bool], currentRound: int
+) -> bool:
     if len(othermoves) < 2:
         return False
     return othermoves[-1] and othermoves[-2]
 
 
-def nukeForTat(mymoves: List[bool], othermoves: List[bool], currentRound: int) -> bool:
-    # Stays silent until the other player rats. If the other player's rats this player rats forever.
+def nuke_for_tat(
+    mymoves: List[bool], othermoves: List[bool], currentRound: int
+) -> bool:
     if len(othermoves) == 0:
         return False
     return True in othermoves
 
 
-def nukeForTwoTats(mymoves: List[bool], othermoves: List[bool], currentRound: int) -> bool:
-    # Stays silent until the other player rats twice. If the other player's rats twice this player rats forever.
+def nuke_for_two_tats(
+    mymoves: List[bool], othermoves: List[bool], currentRound: int
+) -> bool:
     if len(othermoves) < 2:
         return False
-    indices = [i for i, x in enumerate(othermoves) if x == True]
+    indices = [i for i, x in enumerate(othermoves) if x]
     for i in range(len(indices) - 1):
         if indices[i] == indices[i + 1] - 1:
             return True
     return False
 
 
+def two_tits_for_tat(
+    mymoves: List[bool], othermoves: List[bool], currentRound: int
+) -> bool:
+    if currentRound == 0:
+        return False
+    if (currentRound >= 1 and othermoves[-1]) or (currentRound >= 2 and othermoves[-2]):
+        return True
+    return False
+
+
+def pavlov(mymoves: List[bool], othermoves: List[bool], currentRound: int) -> bool:
+    if currentRound == 0:
+        return False
+    return not mymoves[-1] == othermoves[-1]
+
+
+def suspicious_tit_for_tat(
+    mymoves: List[bool], othermoves: List[bool], currentRound: int
+) -> bool:
+    if currentRound == 0:
+        return True
+    return othermoves[-1]
+
+
 all_default_functions = [
     rat,
     silent,
     rand,
-    kindaRandom,
-    titForTat,
-    titForTwoTats,
-    nukeForTat,
-    nukeForTwoTats,
+    kinda_random,
+    tit_for_tat,
+    tit_for_two_tats,
+    nuke_for_tat,
+    nuke_for_two_tats,
+    two_tits_for_tat,
+    pavlov,
+    suspicious_tit_for_tat,
 ]
