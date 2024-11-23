@@ -14,7 +14,7 @@ def get_pairwise():
     with open(RAW_OUT_LOCATION, "r") as raw_out_file:
         clean_data = json.loads(raw_out_file.read())
     pairwise = pd.DataFrame.from_dict(clean_data)
-    adjusted_pairwise = pairwise.applymap(lambda scores: scores[::-1] if isinstance(scores, list) else None)
+    adjusted_pairwise = pairwise.apply(lambda scores: scores[::-1] if isinstance(scores, list) else None)
     return adjusted_pairwise
 
 

@@ -128,8 +128,7 @@ def get_and_load_functions(
                     f"Pastebin link {link} has too many functions: "
                     f"(actual: {num_functions}, maximum: {maximum_num_functions})"
                 )
-            else:
-                exec(code, {}, functions)
+            exec(code, {}, functions)
         except Exception as error:
             logger.error(f"Failed to execute code: {str(error)}")
 
@@ -172,7 +171,7 @@ def check_functions_io(
     Functions must take three arguments (their moves, opponent's moves, round number) and return a boolean.
 
     Returns tuple of the good and bad functions (in that order).
-    """
+    """    
     good_functions = []
     bad_function_results = []
 

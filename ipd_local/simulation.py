@@ -122,7 +122,7 @@ def play_match(
     `noise`, `noise_level`, `rounds`, and `num_games` all default to the values specified in `game_specs.py`
 
     Returns: a 2-element list of their scores.
-    """
+    """    
     player1, player2 = unpack_functions(bytecode)
     games = []
     for _ in range(num_noise_games_to_avg if noise else 1):
