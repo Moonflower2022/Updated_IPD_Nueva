@@ -104,8 +104,6 @@ def get_and_load_functions(
     num_erroneous_pastebins = 0
     num_overloaded_pastebins = 0
 
-    functions = {}
-
     # iterate through all submissions (every student)
     for i in tqdm(range(1, len(data))):
         if data[i][name_col] in block:
@@ -129,12 +127,12 @@ def get_and_load_functions(
                     f"Pastebin link {link} has too many functions: "
                     f"(actual: {num_functions}, maximum: {maximum_num_functions})"
                 )
-            exec(code, {}, functions)
+            exec(code)
         except Exception as error:
             logger.error(f"Failed to execute code: {str(error)}")
 
     # get all the functions that have been loaded without issue
-    loaded_functions = [function for function in functions.values() if callable(function)]
+    loaded_functions = [functions for functions in locals().values() if callable(functions)]
 
     # filter for functions that pass basic input/output check
     good_functions, bad_function_pairs = check_functions_io(loaded_functions)

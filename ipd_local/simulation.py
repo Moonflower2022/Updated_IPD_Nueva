@@ -109,17 +109,16 @@ def play_match(
         for i in range(rounds):
             
             try:
-                with suppress_output():
-                    player1move = player1(
-                        player1moves,
-                        player2percieved,
-                        i,
-                    )
-                    player2move = player2(
-                        player2moves,
-                        player1percieved,
-                        i,
-                    )
+                player1move = player1(
+                    player1moves,
+                    player2percieved,
+                    i,
+                )
+                player2move = player2(
+                    player2moves,
+                    player1percieved,
+                    i,
+                )
                 if not isinstance(player1move, bool) or not isinstance(
                     player2move, bool
                 ):
