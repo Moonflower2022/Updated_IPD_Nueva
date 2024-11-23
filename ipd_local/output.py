@@ -11,10 +11,12 @@ from .game_specs import *
 # returns pairwise scores for all functions as a pandas dataframe.
 # column is first function, row is second function.
 def get_pairwise():
+    def adjust_scores(scores):
+        return scores[::-1] if isinstance(scores, list) else ""
     with open(RAW_OUT_LOCATION, "r") as raw_out_file:
         clean_data = json.loads(raw_out_file.read())
     pairwise = pd.DataFrame.from_dict(clean_data)
-    adjusted_pairwise = pairwise.apply(lambda scores: scores[::-1] if isinstance(scores, list) else None)
+    adjusted_pairwise = pairwise.apply(lambda row: row.map(adjust_scores), axis=1)
     return adjusted_pairwise
 
 
