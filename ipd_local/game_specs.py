@@ -8,10 +8,8 @@ NOISE_LEVEL = 0.1  # percentage noise; only used if NOISE is set to True
 NUM_NOISE_GAMES_TO_AVG = 50  # number of noise games to play and average (only if noise is true)
 
 # Random round range from 100 - 200
-ROUNDS = randint(
-    100, 200
-)  # number of rounds each strategy plays against each other strategy
-MAXIMUM_NUM_FUNCTIONS = 10
+ROUNDS = randint(100, 200)  # number of rounds each strategy plays against each other strategy
+MAXIMUM_NUM_FUNCTIONS = 10 # change to a very large number if this restriction is not desired
 
 # scores distribution, assuming symmetry
 POINTS_BOTH_COOPERATE = 5  # score for both players when they cooperate

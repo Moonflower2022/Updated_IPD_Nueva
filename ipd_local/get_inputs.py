@@ -1,19 +1,15 @@
 """Submodule for handling inputs. Responsible for spreadsheet fetching, pastebin downloads, function verification/loading."""
 
+from .types import *
+from .game_specs import *
+from .output_locations import BLACKLIST_LOCATION
+from utils import suppress_output
+
 import gspread
 import requests
 from tqdm import tqdm
-
 import parse
-
 from loguru import logger
-
-from .types import *
-from .game_specs import *
-from .default_strategies import *
-from .simulation import *
-from .output_locations import *
-from utils import suppress_output
 import os
 import urllib
 

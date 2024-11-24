@@ -1,16 +1,14 @@
 """Submodule that actually simulates the IPD game."""
 
+from .types import *
+from .game_specs import *
+from .output_locations import *
+from utils import suppress_output
+
 import random
 from tqdm import tqdm
 from functools import partial
-
-from .types import *
-import types
-from .game_specs import *
-from .output_locations import *
 from loguru import logger
-
-from utils import suppress_output
 import multiprocessing as mp
 import marshal
 from collections import defaultdict
@@ -23,7 +21,10 @@ def pack_functions(
     Note:
     - If the function references globals, it will not work!
     """
-    return ((marshal.dumps(functions[0].__code__), functions[0].__name__), (marshal.dumps(functions[1].__code__), functions[1].__name__))
+    return (
+        (marshal.dumps(functions[0].__code__), functions[0].__name__),
+        (marshal.dumps(functions[1].__code__), functions[1].__name__),
+    )
 
 
 def unpack_functions(
@@ -33,8 +34,12 @@ def unpack_functions(
     Default function names are "p1" and "p2".
     """
     return (
-        types.FunctionType(marshal.loads(bytecodes[0][0]), globals(), bytecodes[0][1] or "p1"),
-        types.FunctionType(marshal.loads(bytecodes[1][0]), globals(), bytecodes[1][1] or "p2"),
+        FunctionType(
+            marshal.loads(bytecodes[0][0]), globals(), bytecodes[0][1] or "p1"
+        ),
+        FunctionType(
+            marshal.loads(bytecodes[1][0]), globals(), bytecodes[1][1] or "p2"
+        ),
     )
 
 
@@ -113,24 +118,28 @@ def play_match(
                         player2percieved,
                         i,
                     )
-                    
+
                     if not isinstance(player1move, bool):
                         raise Exception("Strategy returned invalid response!")
                 except Exception as e:
-                    logger.error(f"An error occurred for function {player1.__name__}: {e}")
+                    logger.error(
+                        f"An error occurred for function {player1.__name__}: {e}"
+                    )
                     return None
-                
+
                 try:
                     player2move = player2(
                         player2moves,
                         player1percieved,
                         i,
                     )
-                    
+
                     if not isinstance(player2move, bool):
                         raise Exception("Strategy returned invalid response!")
                 except Exception as e:
-                    logger.error(f"An error occurred for function {player2.__name__}: {e}")
+                    logger.error(
+                        f"An error occurred for function {player2.__name__}: {e}"
+                    )
                     return None
 
                 player1moves.append(player1move)

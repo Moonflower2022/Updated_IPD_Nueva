@@ -1,18 +1,18 @@
 # main!!
 # run this file to run the actual simulation
 
-import json
-
-import ipd_local
 from ipd_local.game_specs import *
-from ipd_local.simulation import *
-from ipd_local.get_inputs import *
+from ipd_local.simulation import run_simulation
+from ipd_local.get_inputs import get_spreadsheet_data, get_and_load_functions
 from ipd_local.output_locations import *
 from ipd_local.output import *
+from ipd_local.default_strategies import all_default_functions
 
+import json
 from loguru import logger
 import sys
 import time
+import random
 
 if DEBUG_MODE == True:
     random.seed(0)
