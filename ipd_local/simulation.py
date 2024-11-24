@@ -11,31 +11,30 @@ from .output_locations import *
 from loguru import logger
 
 from utils import suppress_output
-import multiprocessing
+import multiprocessing as mp
 import marshal
 from collections import defaultdict
 
 
 def pack_functions(
     functions: Tuple[Callable[..., Any], Callable[..., Any]]
-) -> Tuple[bytes, bytes]:
-    """Packs a tuple of two functions into a tuple of their bytecode.
+) -> Tuple[Tuple[bytes, str], Tuple[bytes, str]]:
+    """Packs a tuple of two functions into a tuples of with their bytecode and name.
     Note:
     - If the function references globals, it will not work!
-    - This loses the function name information.
     """
-    return (marshal.dumps(functions[0].__code__), marshal.dumps(functions[1].__code__))
+    return ((marshal.dumps(functions[0].__code__), functions[0].__name__), (marshal.dumps(functions[1].__code__), functions[1].__name__))
 
 
 def unpack_functions(
-    bytecodes: Tuple[bytes, bytes]
+    bytecodes: Tuple[Tuple[bytes, str], Tuple[bytes, str]]
 ) -> Tuple[Callable[..., Any], Callable[..., Any]]:
-    """Unpacks a tuple of two bytecode sequences into a tuple of functions.
+    """Unpacks a tuple of two tuples of bytecode sequences and names into a tuple of functions.
     Default function names are "p1" and "p2".
     """
     return (
-        types.FunctionType(marshal.loads(bytecodes[0]), globals(), "p1"),
-        types.FunctionType(marshal.loads(bytecodes[1]), globals(), "p2"),
+        types.FunctionType(marshal.loads(bytecodes[0][0]), globals(), bytecodes[0][1] or "p1"),
+        types.FunctionType(marshal.loads(bytecodes[1][0]), globals(), bytecodes[1][1] or "p2"),
     )
 
 
@@ -97,58 +96,65 @@ def play_match(
     `noise`, `noise_level`, `rounds`, and `num_games` all default to the values specified in `game_specs.py`
 
     Returns: a 2-element list of their scores.
-    """    
+    """
     player1, player2 = unpack_functions(bytecode)
     games = []
-    for _ in range(num_noise_games_to_avg if noise else 1):
-        player1moves = []
-        player2moves = []
-        player1percieved = []
-        player2percieved = []
+    with suppress_output():
+        for _ in range(num_noise_games_to_avg if noise else 1):
+            player1moves = []
+            player2moves = []
+            player1percieved = []
+            player2percieved = []
 
-        for i in range(rounds):
-            
-            try:
-                player1move = player1(
-                    player1moves,
-                    player2percieved,
-                    i,
+            for i in range(rounds):
+                try:
+                    player1move = player1(
+                        player1moves,
+                        player2percieved,
+                        i,
+                    )
+                    
+                    if not isinstance(player1move, bool):
+                        raise Exception("Strategy returned invalid response!")
+                except Exception as e:
+                    logger.error(f"An error occurred for function {player1.__name__}: {e}")
+                    return None
+                
+                try:
+                    player2move = player2(
+                        player2moves,
+                        player1percieved,
+                        i,
+                    )
+                    
+                    if not isinstance(player2move, bool):
+                        raise Exception("Strategy returned invalid response!")
+                except Exception as e:
+                    logger.error(f"An error occurred for function {player2.__name__}: {e}")
+                    return None
+
+                player1moves.append(player1move)
+                player2moves.append(player2move)
+                player1percieved.append(
+                    not player1move
+                    if NOISE and random.random() < noise_level
+                    else player1move
                 )
-                player2move = player2(
-                    player2moves,
-                    player1percieved,
-                    i,
+                player2percieved.append(
+                    not player2move
+                    if NOISE and random.random() < noise_level
+                    else player2move
                 )
-                if not isinstance(player1move, bool) or not isinstance(
-                    player2move, bool
-                ):
-                    raise Exception("Strategy returned invalid response!")
-            except Exception as e:
-                print(f"An error occurred: {e}")
+
+            if len(player1moves) != rounds or len(player2moves) != rounds:
                 return None
 
-            player1moves.append(player1move)
-            player2moves.append(player2move)
-            player1percieved.append(
-                not player1move
-                if NOISE and random.random < noise_level
-                else player1move
-            )
-            player2percieved.append(
-                not player2move
-                if NOISE and random.random < noise_level
-                else player2move
-            )
+            games.append(get_scores(player1moves, player2moves))
 
-        if len(player1moves) != rounds or len(player2moves) != rounds:
-            return None
-
-        games.append(get_scores(player1moves, player2moves))
-
-    return [
-        sum([game[0] for game in games]) / (num_noise_games_to_avg if noise else 1),
-        sum([game[1] for game in games]) / (num_noise_games_to_avg if noise else 1),
-    ]
+        return [
+            sum([game[0] for game in games]) / (num_noise_games_to_avg if noise else 1),
+            sum([game[1] for game in games]) / (num_noise_games_to_avg if noise else 1),
+        ]
 
 
 def run_simulation(
@@ -169,7 +175,7 @@ def run_simulation(
     - `noise_games_to_average`: the number of games to play before averaging results if noise is on.
 
     `noise`, `noise_level`, `rounds`, and `num_games` all default to the values specified in `game_specs.py`
-    
+
     Returns a nested dictionary that maps matchups to results.
     Example:
     ```
@@ -184,7 +190,7 @@ def run_simulation(
             if j <= i:
                 continue
             matchups.append((p1, p2))
-    with multiprocessing.Pool(16) as p:
+    with mp.Pool(mp.cpu_count()) as pool:
         specified_play_match = partial(
             play_match,
             noise=noise,
@@ -192,9 +198,10 @@ def run_simulation(
             rounds=rounds,
             num_noise_games_to_avg=num_noise_games_to_avg,
         )
+
         result = list(
             tqdm(
-                p.imap(  # NOTE imap() may be the source of the slowness...?
+                pool.imap(  # NOTE imap() may be the source of the slowness...?
                     specified_play_match,
                     [pack_functions(x) for x in matchups],
                 ),

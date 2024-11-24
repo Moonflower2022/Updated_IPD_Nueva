@@ -4,13 +4,10 @@
 
 Updated Code Base for MicroEconomics Iterated Prisoner's Dilemma simulation.
 
-MOST Originally pulled from: <https://github.com/annliz/IPD>. Major changes:
+* to block people's submissions, add names to "blocked_submissions.txt"
+* to block individual strategies, add function names to "blocked_functions.txt"
 
-* Payoffs: original code had error in payoff when one player betrays.
-* Random Rounds: setting rounds to be random value between 100 and 200.
-* Blocking players: block specific players by adding their names to blocked.txt
-
-This version is pulled from <https://github.com/AleTuch17/Updated_IPD_Nueva>. Major changes can be seen in commit history, but here is a brief list:
+This version is pulled from <https://github.com/AleTuch17/Updated_IPD_Nueva>, which was pulled from <https://github.com/annliz/IPD>. Major changes can be seen in commit history, but here is a brief list:
 
 * \[INSERT LIST HERE]
 
@@ -29,3 +26,4 @@ Documentation found here: <https://docs.google.com/document/d/1JOLhksun38wb1Sgl5
   * put control settings in a class (so)
 * redo command line parsing
 * actually put in what the significant changes are
+* export the pairwise as csv too

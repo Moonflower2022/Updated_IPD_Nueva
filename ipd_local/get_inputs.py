@@ -99,16 +99,23 @@ def get_and_load_functions(
     """
     print("Retrieving student code...")
 
-    block = open("blocked.txt", "r").read()
+    with open("blocked_functions.txt", "r") as blocked_functions_file:
+        blocked_functions = blocked_functions_file.read().split("\n")
+
+    with open("blocked_submissions.txt", "r") as blocked_submissions_file:
+        blocked_submissions = blocked_submissions_file.read().split("\n")
+
+    sucessfully_blocked_items = []
 
     num_erroneous_pastebins = 0
     num_overloaded_pastebins = 0
+    num_blocked_pastebins = 0
 
     # iterate through all submissions (every student)
     for i in tqdm(range(1, len(data))):
-        if data[i][name_col] in block:
-            with open("successful_block.txt", "w") as f:
-                f.write("Successfully blocked " + str(data[i][name_col]))
+        if data[i][name_col] == blocked_submissions:
+            sucessfully_blocked_items.append(str(data[i][name_col]))
+            num_blocked_pastebins += 1
             continue
         link = data[i][noise_col if noise else regular_col]
 
@@ -132,7 +139,9 @@ def get_and_load_functions(
             logger.error(f"Failed to execute code: {str(error)}")
 
     # get all the functions that have been loaded without issue
-    loaded_functions = [functions for functions in locals().values() if callable(functions)]
+    loaded_functions = [func for func in locals().values() if callable(func) and not func.__name__ in blocked_functions]
+
+    sucessfully_blocked_items += [func.__name__ for func in locals().values() if callable(func) and func.__name__ in blocked_functions]
 
     # filter for functions that pass basic input/output check
     good_functions, bad_function_pairs = check_functions_io(loaded_functions)
@@ -142,10 +151,17 @@ def get_and_load_functions(
             blacklist_file.write(
                 "From " + function.__name__ + ", error: " + str(error) + "\n"
             )
+
+    with open("successful_blocks.txt", "w") as blocks_file:
+        for successfully_blocked_item in sucessfully_blocked_items:
+            blocks_file.write(f"Successfully blocked {successfully_blocked_item}\n")
+    
     print(f"Could not load code from {num_erroneous_pastebins} pastebins.")
     print(
         f"Removed {num_overloaded_pastebins} pastebins for having more than {maximum_num_functions} functions."
     )
+    print(f"Blocked {num_blocked_pastebins} pastebins.")
+    print(f"Blocked {len(sucessfully_blocked_items) - num_blocked_pastebins} individual functions.")
     print(f"Removed {len(bad_function_pairs)} functions for bad IO.")
     print(f"Loaded {len(good_functions)} good functions.")
     return good_functions
