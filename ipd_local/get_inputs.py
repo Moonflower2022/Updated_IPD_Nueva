@@ -12,6 +12,11 @@ import parse
 from loguru import logger
 import os
 import urllib
+import random
+
+# ↑ the "import random" is very important, a lot of functions use 
+# it without importing it in their own code,
+# without it those functions will not run
 
 
 def get_spreadsheet_data(sheet: str, tab: str) -> List[List[str]]:
@@ -135,29 +140,37 @@ def get_and_load_functions(
             logger.error(f"Failed to execute code: {str(error)}")
 
     # get all the functions that have been loaded without issue
-    loaded_functions = [func for func in locals().values() if callable(func) and not func.__name__ in blocked_functions]
+    loaded_functions = [
+        func
+        for func in locals().values()
+        if callable(func) and not func.__name__ in blocked_functions
+    ]
 
-    sucessfully_blocked_items += [func.__name__ for func in locals().values() if callable(func) and func.__name__ in blocked_functions]
+    sucessfully_blocked_items += [
+        func.__name__
+        for func in locals().values()
+        if callable(func) and func.__name__ in blocked_functions
+    ]
 
     # filter for functions that pass basic input/output check
-    good_functions, bad_function_pairs = check_functions_io(loaded_functions)
+    good_functions, bad_function_pairs = check_functions(loaded_functions)
 
     with open(BLACKLIST_LOCATION, "w") as blacklist_file:
         for function, error in bad_function_pairs:
-            blacklist_file.write(
-                "From " + function.__name__ + ", error: " + str(error) + "\n"
-            )
+            blacklist_file.write(f"From {function.__name__} error: {error}\n")
 
     with open("successful_blocks.txt", "w") as blocks_file:
         for successfully_blocked_item in sucessfully_blocked_items:
             blocks_file.write(f"Successfully blocked {successfully_blocked_item}\n")
-    
+
     print(f"Could not load code from {num_erroneous_pastebins} pastebins.")
     print(
         f"Removed {num_overloaded_pastebins} pastebins for having more than {maximum_num_functions} functions."
     )
     print(f"Blocked {num_blocked_pastebins} pastebins.")
-    print(f"Blocked {len(sucessfully_blocked_items) - num_blocked_pastebins} individual functions.")
+    print(
+        f"Blocked {len(sucessfully_blocked_items) - num_blocked_pastebins} individual functions."
+    )
     print(f"Removed {len(bad_function_pairs)} functions for bad IO.")
     print(f"Loaded {len(good_functions)} good functions.")
     return good_functions
@@ -174,7 +187,7 @@ def get_num_functions(code: str):
     return num_functions
 
 
-def check_functions_io(
+def check_functions(
     functions: List[Strategy],
 ) -> Tuple[List[Strategy], List[Strategy]]:
     """
@@ -182,8 +195,8 @@ def check_functions_io(
     Functions must take three arguments (their moves, opponent's moves, round number) and return a boolean.
 
     Returns tuple of the good and bad functions (in that order).
-    """    
-    
+    """
+
     good_functions = []
     bad_function_results = []
 
@@ -197,7 +210,7 @@ def check_functions_io(
                     output = function(*test_case)
                 if not isinstance(output, bool):
                     logger.error(
-                        f"Testing I/O of {function.__name__} failed: output was not bool"
+                        f"Testing of {function.__name__} failed: output was not bool"
                     )
                     bad_function_results.append((function, "output was not bool"))
                     is_bad = True
@@ -206,7 +219,7 @@ def check_functions_io(
             if not is_bad:
                 good_functions.append(function)
         except Exception as e:
-            logger.error(f"Testing I/O of {function.__name__} failed: {str(e)}")
+            logger.error(f"Testing of {function.__name__} failed: {str(e)}")
             bad_function_results.append((function, e))
 
     return good_functions, bad_function_results
