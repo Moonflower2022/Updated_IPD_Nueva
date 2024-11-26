@@ -5,7 +5,6 @@ from .game_specs import *
 from .output_locations import *
 from utils import suppress_output
 
-import random
 from tqdm import tqdm
 from functools import partial
 from loguru import logger
@@ -13,6 +12,13 @@ import multiprocessing as mp
 import marshal
 from collections import defaultdict
 
+import random
+import math
+
+# ↑ this seciton of imports is pretty important, a lot 
+# of functions use these modules without importing it 
+# in their own code; without the imports, they will not 
+# run
 
 def pack_functions(
     functions: Tuple[Callable[..., Any], Callable[..., Any]]

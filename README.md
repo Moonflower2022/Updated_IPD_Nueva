@@ -21,9 +21,11 @@ Documentation found here: <https://docs.google.com/document/d/1JOLhksun38wb1Sgl5
 
 ## todo
 
-* check that each paste bin only has 10 functions  
 * why are we importing everything from our modules
-  * put control settings in a class (so)
+* put control settings in a class
 * redo command line parsing
 * actually put in what the significant changes are
 * export the pairwise as csv too
+* parse strategies from each file, turn them into lists of individual functions to import individually
+  * some pastebins were all dying because some of the functions had syntax errors
+  * change the maximum number of funcitons to only load the first 10 instead of just killing the pastebin

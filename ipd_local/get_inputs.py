@@ -12,11 +12,14 @@ import parse
 from loguru import logger
 import os
 import urllib
-import random
 
-# ↑ the "import random" is very important, a lot of functions use 
-# it without importing it in their own code,
-# without it those functions will not run
+import random
+import math
+
+# ↑ this seciton of imports is pretty important, a lot 
+# of functions use these modules without importing it 
+# in their own code; without the imports, they will not 
+# run
 
 
 def get_spreadsheet_data(sheet: str, tab: str) -> List[List[str]]:
