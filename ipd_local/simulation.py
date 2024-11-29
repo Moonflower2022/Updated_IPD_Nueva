@@ -109,6 +109,9 @@ def play_match(
     Returns: a 2-element list of their scores.
     """
     player1, player2 = unpack_functions(bytecode)
+    globals()[player1.__name__] = player1
+    globals()[player2.__name__] = player2
+
     games = []
     with suppress_output():
         for _ in range(num_noise_games_to_avg if noise else 1):
@@ -166,10 +169,13 @@ def play_match(
 
             games.append(get_scores(player1moves, player2moves))
 
-        return [
-            sum([game[0] for game in games]) / (num_noise_games_to_avg if noise else 1),
-            sum([game[1] for game in games]) / (num_noise_games_to_avg if noise else 1),
-        ]
+    del globals()[player1.__name__]
+    del globals()[player2.__name__]
+
+    return [
+        sum([game[0] for game in games]) / (num_noise_games_to_avg if noise else 1),
+        sum([game[1] for game in games]) / (num_noise_games_to_avg if noise else 1),
+    ]
 
 
 def run_simulation(

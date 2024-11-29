@@ -205,24 +205,27 @@ def check_functions(
 
     test_cases = [[[True] * i, [False] * i, i] for i in range(0, ROUNDS)]
 
-    for function in functions:
-        try:
-            is_bad = False
-            for test_case in test_cases:
-                with suppress_output():
+    with suppress_output():
+        for function in functions:
+            globals()[function.__name__] = function
+            try:
+                is_bad = False
+                for test_case in test_cases:
                     output = function(*test_case)
-                if not isinstance(output, bool):
-                    logger.error(
-                        f"Testing of {function.__name__} failed: output was not bool"
-                    )
-                    bad_function_results.append((function, "output was not bool"))
-                    is_bad = True
-                    break
+                    if not isinstance(output, bool):
+                        logger.error(
+                            f"Testing of {function.__name__} failed: output was not bool"
+                        )
+                        bad_function_results.append((function, "output was not bool"))
+                        is_bad = True
+                        break
 
-            if not is_bad:
-                good_functions.append(function)
-        except Exception as e:
-            logger.error(f"Testing of {function.__name__} failed: {str(e)}")
-            bad_function_results.append((function, e))
+                if not is_bad:
+                    good_functions.append(function)
+            except Exception as e:
+                logger.error(f"Testing of {function.__name__} failed: {str(e)}")
+                bad_function_results.append((function, e))
+            finally:
+                del globals()[function.__name__]
 
     return good_functions, bad_function_results
