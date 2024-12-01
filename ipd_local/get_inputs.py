@@ -140,7 +140,8 @@ def get_and_load_functions(
                 )
             exec(code)
         except Exception as error:
-            logger.error(f"Failed to execute code: {str(error)}")
+            num_erroneous_pastebins += 1
+            logger.error(f"Failed to execute code for student {data[i][name_col]}: {str(error)}")
 
     # get all the functions that have been loaded without issue
     loaded_functions = [
