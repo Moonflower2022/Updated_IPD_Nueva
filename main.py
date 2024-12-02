@@ -31,6 +31,9 @@ if __name__ == "__main__":
         else imported_strategies
     )
 
+    if INCLUDE_DEFAULTS:
+        print(f"Added {len(all_default_functions)} default strategies.")
+
     raw_data = run_simulation(all_strategies, noise=NOISE, noise_level=NOISE_LEVEL, rounds=ROUNDS, num_noise_games_to_avg=NUM_NOISE_GAMES_TO_AVG)
 
     with open(RAW_OUT_LOCATION, "w") as fp:

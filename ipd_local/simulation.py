@@ -206,7 +206,7 @@ def run_simulation(
     ```
     """
     matchups = []
-    print(len(strats))
+    print(f"Running simulation with {len(strats)} strategies and {f'A Noise level of {NOISE_LEVEL}' if noise else "No Noise"}.")
     for i, p1 in enumerate(strats):
         for j, p2 in enumerate(strats):
             if j <= i:

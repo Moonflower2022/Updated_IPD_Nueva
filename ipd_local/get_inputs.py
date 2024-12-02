@@ -167,7 +167,7 @@ def get_and_load_functions(
         for successfully_blocked_item in sucessfully_blocked_items:
             blocks_file.write(f"Successfully blocked {successfully_blocked_item}\n")
 
-    print(f"Could not load code from {num_erroneous_pastebins} pastebins.")
+    print(f"Could not load code from {num_erroneous_pastebins} pastebins (you can see which ones by looking at 'ipd.log').")
     print(
         f"Removed {num_overloaded_pastebins} pastebins for having more than {maximum_num_functions} functions."
     )
