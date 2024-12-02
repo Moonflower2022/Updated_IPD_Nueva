@@ -168,9 +168,10 @@ def play_match(
                 return None
 
             games.append(get_scores(player1moves, player2moves))
-
-    del globals()[player1.__name__]
-    del globals()[player2.__name__]
+    if player1.__name__ in globals():
+        del globals()[player1.__name__]
+    if player2.__name__ in globals():
+        del globals()[player2.__name__]
 
     return [
         sum([game[0] for game in games]) / (num_noise_games_to_avg if noise else 1),
