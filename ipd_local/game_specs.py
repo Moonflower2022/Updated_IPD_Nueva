@@ -18,7 +18,7 @@ POINTS_DIFFERENT_WINNER = 9  # score for for ratting if opponent stays silent
 POINTS_BOTH_RAT = 1  # score for both players if they both rat
 
 # run with default functions (always rat, always silent, tit for tat, etc).
-# all default functions can be found in defaul_functions.py
+# all default functions can be found in default_strategies.py
 INCLUDE_DEFAULTS = True
 
 # whether or not to reload blacklisted functions
