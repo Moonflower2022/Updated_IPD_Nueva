@@ -37,7 +37,9 @@ Documentation found here: <https://docs.google.com/document/d/1JOLhksun38wb1Sgl5
 ## todo
 
 * why are we importing everything from our modules
-* put control settings in a class
+* put control settings in a class (not as important)
+* add seciton for functions that should be run single threadedly
+  * maybe automatically test which functions should be run like that?
 * redo command line parsing
 * export the pairwise as csv too
 * parse strategies from each file, turn them into lists of individual functions to import individually
