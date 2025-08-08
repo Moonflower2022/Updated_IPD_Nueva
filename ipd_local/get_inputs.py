@@ -115,16 +115,19 @@ def get_and_load_functions(
     num_overloaded_pastebins = 0
     num_blocked_pastebins = 0
 
+    strategies_namespace = {}
+
     # iterate through all submissions (every student)
     for i in tqdm(range(1, len(data))):
-        if data[i][name_col] == blocked_submissions:
+        if data[i][name_col] in blocked_submissions:
             sucessfully_blocked_items.append(str(data[i][name_col]))
             num_blocked_pastebins += 1
             continue
         link = data[i][noise_col if noise else regular_col]
 
         # HACK reports a false error if the pastebin is empty
-        # because empty strings are falsy
+        # because empty strings are 
+        
         if not (code := get_pastebin(link, cache=cache)):
             logger.error(f"Could not parse pastebin link for {data[i][name_col]}!")
             num_erroneous_pastebins += 1
@@ -138,23 +141,22 @@ def get_and_load_functions(
                     f"Pastebin link {link} has too many functions: "
                     f"(actual: {num_functions}, maximum: {maximum_num_functions})"
                 )
-            exec(code)
+            exec(code, strategies_namespace)
         except Exception as error:
             num_erroneous_pastebins += 1
             logger.error(f"Failed to execute code for student {data[i][name_col]}: {str(error)}")
 
     # get all the functions that have been loaded without issue
-    loaded_functions = [
-        func
-        for func in locals().values()
-        if callable(func) and not func.__name__ in blocked_functions
-    ]
+    loaded_functions = []
 
-    sucessfully_blocked_items += [
-        func.__name__
-        for func in locals().values()
-        if callable(func) and func.__name__ in blocked_functions
-    ]
+    for element in strategies_namespace.values():
+        if hasattr(element, "__name__"):
+            print(element.__name__)
+        if callable(element):
+            if not element.__name__ in blocked_functions:
+                loaded_functions.append(element)
+            elif element.__name__ in blocked_functions:
+                sucessfully_blocked_items.append(element.__name__)            
 
     # filter for functions that pass basic input/output check
     good_functions, bad_function_pairs = check_functions(loaded_functions)
