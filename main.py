@@ -25,14 +25,11 @@ if __name__ == "__main__":
     data = get_spreadsheet_data(INPUT_SHEET_NAME, TAB_NAME)
     imported_strategies = get_and_load_functions(data, cache=False)
 
-    all_strategies = (
-        all_default_functions + imported_strategies
-        if INCLUDE_DEFAULTS
-        else imported_strategies
-    )
-
     if INCLUDE_DEFAULTS:
         print(f"Added {len(all_default_functions)} default strategies.")
+        all_strategies = imported_strategies + all_default_functions
+    else:
+        all_strategies = imported_strategies
 
     raw_data = run_simulation(all_strategies, noise=NOISE, noise_level=NOISE_LEVEL, rounds=ROUNDS, num_noise_games_to_avg=NUM_NOISE_GAMES_TO_AVG)
 

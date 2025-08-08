@@ -13,11 +13,13 @@ def cooperate(my_moves, other_moves, current_round):
 
 
 class TestSimulation(unittest.TestCase):
-
     def test_pack_functions(self):
         self.assertEqual(
             pack_functions((cheat, cooperate)),
-            ((marshal.dumps(cheat.__code__), "cheat"), (marshal.dumps(cooperate.__code__), "cooperate")),
+            (
+                (marshal.dumps(cheat.__code__), "cheat"),
+                (marshal.dumps(cooperate.__code__), "cooperate"),
+            ),
         )
 
     def test_get_scores(self):

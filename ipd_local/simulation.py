@@ -223,7 +223,7 @@ def run_simulation(
 
         result = list(
             tqdm(
-                pool.imap(  # NOTE imap() may be the source of the slowness...?
+                pool.imap(
                     specified_play_match,
                     [pack_functions(x) for x in matchups],
                 ),
