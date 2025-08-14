@@ -3,7 +3,7 @@
 from .types import *
 from .game_specs import *
 from .output_locations import BLACKLIST_LOCATION
-from utils import suppress_output
+from utils import suppress_output, get_length_no_whitespace_no_comments
 
 import gspread
 import requests
@@ -12,6 +12,7 @@ import parse
 from loguru import logger
 import os
 import urllib
+import statistics
 
 import random
 import math
@@ -79,109 +80,6 @@ def get_pastebin(link: str, cache: bool = False) -> Optional[str]:
     return code
 
 
-def get_and_load_functions(
-    data: List[List[str]],
-    name_col: int = STUDENT_NAME_COL,
-    regular_col: int = REGULAR_STRAT_COL,
-    noise_col: int = NOISE_STRAT_COL,
-    noise: bool = NOISE,
-    maximum_num_functions: int = MAXIMUM_NUM_FUNCTIONS,
-    cache: bool = False,
-) -> List[Strategy]:
-    """
-    Downloads, loads, and filters all of the python code in the provided pastebin links.
-    Filtering of functions is done via `check_functions_io`
-
-    Arguments:
-    - `data`: the column-row list of lists representing the spreadsheet contents. See `get_spreadsheet_data()`
-    - `name_col`: the column that the student names are located in. One-indexed!
-    - `regular_col`: the column that the regular strategies are located in. One-indexed!
-    - `noise_col`: the column that the noise strategies are located in. One-indexed!
-    - `noise`: whether or not the current game is being run with noise.
-
-    All arguments except for `data` defaults to specified value in `game_specs.py`.
-    """
-    print("Retrieving student code...")
-
-    with open("blocked_functions.txt", "r") as blocked_functions_file:
-        blocked_functions = blocked_functions_file.read().split("\n")
-
-    with open("blocked_submissions.txt", "r") as blocked_submissions_file:
-        blocked_submissions = blocked_submissions_file.read().split("\n")
-
-    sucessfully_blocked_items = []
-
-    num_erroneous_pastebins = 0
-    num_overloaded_pastebins = 0
-    num_blocked_pastebins = 0
-
-    strategies_namespace = {}
-
-    # iterate through all submissions (every student)
-    for i in tqdm(range(1, len(data))):
-        if data[i][name_col] in blocked_submissions:
-            sucessfully_blocked_items.append(str(data[i][name_col]))
-            num_blocked_pastebins += 1
-            continue
-        link = data[i][noise_col if noise else regular_col]
-
-        # HACK reports a false error if the pastebin is empty
-        # because empty strings are 
-        
-        if not (code := get_pastebin(link, cache=cache)):
-            logger.error(f"Could not parse pastebin link for {data[i][name_col]}!")
-            num_erroneous_pastebins += 1
-            continue
-
-        try:
-            num_functions = get_num_functions(code)
-            if num_functions > maximum_num_functions:
-                num_overloaded_pastebins += 1
-                raise Exception(
-                    f"Pastebin link {link} has too many functions: "
-                    f"(actual: {num_functions}, maximum: {maximum_num_functions})"
-                )
-            exec(code, strategies_namespace)
-        except Exception as error:
-            num_erroneous_pastebins += 1
-            logger.error(f"Failed to execute code for student {data[i][name_col]}: {str(error)}")
-
-    # get all the functions that have been loaded without issue
-    loaded_functions = []
-
-    for element in strategies_namespace.values():
-        if hasattr(element, "__name__"):
-            print(element.__name__)
-        if callable(element):
-            if not element.__name__ in blocked_functions:
-                loaded_functions.append(element)
-            elif element.__name__ in blocked_functions:
-                sucessfully_blocked_items.append(element.__name__)            
-
-    # filter for functions that pass basic input/output check
-    good_functions, bad_function_pairs = check_functions(loaded_functions)
-
-    with open(BLACKLIST_LOCATION, "w") as blacklist_file:
-        for function, error in bad_function_pairs:
-            blacklist_file.write(f"From {function.__name__} error: {error}\n")
-
-    with open("successful_blocks.txt", "w") as blocks_file:
-        for successfully_blocked_item in sucessfully_blocked_items:
-            blocks_file.write(f"Successfully blocked {successfully_blocked_item}\n")
-
-    print(f"Could not load code from {num_erroneous_pastebins} pastebins (you can see which ones by looking at 'ipd.log').")
-    print(
-        f"Removed {num_overloaded_pastebins} pastebins for having more than {maximum_num_functions} functions."
-    )
-    print(f"Blocked {num_blocked_pastebins} pastebins.")
-    print(
-        f"Blocked {len(sucessfully_blocked_items) - num_blocked_pastebins} individual functions."
-    )
-    print(f"Removed {len(bad_function_pairs)} functions for bad IO.")
-    print(f"Loaded {len(good_functions)} good functions.")
-    return good_functions
-
-
 def get_num_functions(code: str):
     lines = code.split("\n")
 
@@ -191,7 +89,6 @@ def get_num_functions(code: str):
             num_functions += 1
 
     return num_functions
-
 
 def check_functions(
     functions: List[Strategy],
@@ -226,3 +123,139 @@ def check_functions(
                     del globals()[function.__name__]
 
     return good_functions, bad_function_results
+
+def get_and_load_functions(
+    data: List[List[str]],
+    name_col: int = STUDENT_NAME_COL,
+    regular_col: int = REGULAR_STRAT_COL,
+    noise_col: int = NOISE_STRAT_COL,
+    noise: bool = NOISE,
+    maximum_num_functions: int = MAXIMUM_NUM_FUNCTIONS,
+    maximum_char_count: int = MAXIMUM_CHAR_COUNT,
+    cache: bool = False,
+) -> List[Strategy]:
+    """
+    Downloads, loads, and filters all of the python code in the provided pastebin links.
+    Filtering of functions is done via `check_functions_io`
+
+    Arguments:
+    - `data`: the column-row list of lists representing the spreadsheet contents. See `get_spreadsheet_data()`
+    - `name_col`: the column that the student names are located in. One-indexed!
+    - `regular_col`: the column that the regular strategies are located in. One-indexed!
+    - `noise_col`: the column that the noise strategies are located in. One-indexed!
+    - `noise`: whether or not the current game is being run with noise.
+
+    All arguments except for `data` defaults to specified value in `game_specs.py`.
+    """
+    print("Retrieving student code...")
+
+    with open("blocked_functions.txt", "r") as blocked_functions_file:
+        blocked_functions = blocked_functions_file.read().split("\n")
+
+    with open("blocked_submissions.txt", "r") as blocked_submissions_file:
+        blocked_submissions = blocked_submissions_file.read().split("\n")
+
+    sucessfully_blocked_items = []
+
+    num_erroneous_pastebins = 0
+    num_function_overloaded_pastebins = 0
+    num_character_overloaded_pastebins = 0
+    num_blocked_pastebins = 0
+
+    strategies_namespace = {}
+
+    char_counts = []
+
+    # iterate through all submissions (every student)
+    for i in tqdm(range(1, len(data))):
+        if data[i][name_col] in blocked_submissions:
+            sucessfully_blocked_items.append(str(data[i][name_col]))
+            num_blocked_pastebins += 1
+            continue
+        link = data[i][noise_col if noise else regular_col]
+
+        # HACK reports a false error if the pastebin is empty
+        # because empty strings are 
+        
+        if not (code := get_pastebin(link, cache=cache)):
+            logger.error(f"Could not parse pastebin link for {data[i][name_col]}!")
+            num_erroneous_pastebins += 1
+            continue
+        
+        num_functions = get_num_functions(code)
+        if num_functions > maximum_num_functions:
+            num_function_overloaded_pastebins += 1
+            logger.error(
+                f"Pastebin link {link} has too many functions: (actual: {num_functions}, maximum: {maximum_num_functions})"
+            )
+            continue
+
+        char_count = get_length_no_whitespace_no_comments(code)
+        char_counts.append(char_count)
+
+        if char_count > maximum_char_count:
+            num_character_overloaded_pastebins += 1
+            logger.error(
+                f"Pastebin link {link} has too many characters: (actual: {char_count}, maximum: {maximum_char_count})"
+            )
+            continue
+
+
+        # oh boy here we go
+        try:
+            
+            exec(code, strategies_namespace)
+        except Exception as error:
+            num_erroneous_pastebins += 1
+            logger.error(f"Failed to execute code for student {data[i][name_col]}: {str(error)}")
+
+    # get all the functions that have been loaded without issue
+    loaded_functions = []
+
+    for element in strategies_namespace.values():
+        if callable(element):
+            if not element.__name__ in blocked_functions:
+                loaded_functions.append(element)
+            elif element.__name__ in blocked_functions:
+                sucessfully_blocked_items.append(element.__name__)            
+
+    # filter for functions that pass basic input/output check
+    good_functions, bad_function_pairs = check_functions(loaded_functions)
+
+    with open(BLACKLIST_LOCATION, "w") as blacklist_file:
+        for function, error in bad_function_pairs:
+            blacklist_file.write(f"From {function.__name__} error: {error}\n")
+
+    with open("successful_blocks.txt", "w") as blocks_file:
+        for successfully_blocked_item in sucessfully_blocked_items:
+            blocks_file.write(f"Successfully blocked {successfully_blocked_item}\n")
+
+    if num_erroneous_pastebins > 0:
+        print(f"Could not load code from {num_erroneous_pastebins} pastebins (you can see which ones by looking at 'ipd.log').")
+    if num_function_overloaded_pastebins > 0:
+        print(
+            f"Removed {num_function_overloaded_pastebins} pastebins for having more than {maximum_num_functions} functions."
+        )
+    if num_character_overloaded_pastebins > 0:
+        print(
+            f"Removed {num_character_overloaded_pastebins} pastebins for having more than {maximum_char_count} characters."
+        )
+    if num_blocked_pastebins > 0:
+        print(f"Blocked {num_blocked_pastebins} pastebins.")
+    if len(sucessfully_blocked_items) - num_blocked_pastebins > 0:
+        print(
+            f"Blocked {len(sucessfully_blocked_items) - num_blocked_pastebins} individual functions."
+        )
+    if len(bad_function_pairs) > 0:
+        print(f"Removed {len(bad_function_pairs)} functions for bad IO.")
+
+    print(f"Loaded {len(good_functions)} good functions.")
+
+    print("Number of characters (no whitespace or comments)")
+    print("std dev:", statistics.stdev(char_counts))
+    print("mean:", statistics.mean(char_counts))
+    print("q1, q2, q3:", statistics.quantiles(char_counts))
+    print("min:", min(char_counts))
+    print("max:", max(char_counts))
+
+    return good_functions

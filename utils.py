@@ -13,3 +13,18 @@ class suppress_output:
         sys.stdout = self.original_stdout
         sys.stderr = self.original_stderr
         self.null.close()
+
+
+def get_length_no_whitespace(code):
+    return sum([
+        len("".join(line.split())) for line in code
+    ])
+
+def get_length_no_whitespace_no_comments(code):
+    length = 0
+    for line in code:
+        if "#" in line:
+            length += get_length_no_whitespace(line.split("#")[0])
+        else:
+            length += get_length_no_whitespace(line)
+    return length

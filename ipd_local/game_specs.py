@@ -10,6 +10,7 @@ NUM_NOISE_GAMES_TO_AVG = 50  # number of noise games to play and average (only i
 # Random round range from 100 - 200
 ROUNDS = randint(100, 200)  # number of rounds each strategy plays against each other strategy
 MAXIMUM_NUM_FUNCTIONS = 10 # change to a very large number if this restriction is not desired
+MAXIMUM_CHAR_COUNT = 5000 # change to a very large number if this restriction is not desired
 
 # scores distribution, assuming symmetry
 POINTS_BOTH_COOPERATE = 5  # score for both players when they cooperate
@@ -28,7 +29,7 @@ INCLUDE_DEFAULTS = True
 RELOAD_BLACKLIST = True
 
 # names for input and output sheets
-INPUT_SHEET_NAME = "IPD Player Strategies"
+INPUT_SHEET_NAME = "IPD Player Strategies" # "Copy of IPD 2024 Strategy Submissions (Responses)"
 TAB_NAME = "Form Responses 1"
 OUTPUT_SHEET_NAME = "IPD Latest Run Results"
 
