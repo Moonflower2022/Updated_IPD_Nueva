@@ -13,9 +13,12 @@ from loguru import logger
 import sys
 import time
 import random
+import numpy as np
 
-if DEBUG_MODE == True:
-    random.seed(0)
+if RANDOM_SEED:
+    print(f"setting random seed to {RANDOM_SEED}")
+    random.seed(RANDOM_SEED)
+    np.random.seed(RANDOM_SEED)
 
 if __name__ == "__main__":
     logger.remove()
@@ -31,7 +34,13 @@ if __name__ == "__main__":
     else:
         all_strategies = imported_strategies
 
-    raw_data = run_simulation(all_strategies, noise=NOISE, noise_level=NOISE_LEVEL, rounds=ROUNDS, num_noise_games_to_avg=NUM_NOISE_GAMES_TO_AVG)
+    raw_data = run_simulation(
+        all_strategies,
+        noise=NOISE,
+        noise_level=NOISE_LEVEL,
+        rounds=ROUNDS,
+        num_noise_games_to_avg=NUM_NOISE_GAMES_TO_AVG,
+    )
 
     with open(RAW_OUT_LOCATION, "w") as fp:
         fp.write(json.dumps(raw_data))
@@ -45,7 +54,7 @@ if __name__ == "__main__":
         "Points for winner when different": POINTS_DIFFERENT_WINNER,
         "Points for loser when different": POINTS_DIFFERENT_LOSER,
         "Points when both cooperate": POINTS_BOTH_COOPERATE,
-        "Debug mode (fixed random seed - should be off)": DEBUG_MODE,
+        "Random Seed": RANDOM_SEED,
     }
     with open("./latest_specs.json", "w") as fp:
         fp.write(json.dumps(specs))
