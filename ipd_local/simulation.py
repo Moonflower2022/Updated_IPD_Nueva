@@ -132,7 +132,7 @@ def play_match(
                         raise Exception("Strategy returned invalid response!")
                 except Exception as e:
                     logger.error(
-                        f"An error occurred for function {player1.__name__}: {e}"
+                        f"An error occurred for function {player1.__name__}: {e} on round {i} against {player2.__name__}"
                     )
                     return None
 
@@ -147,7 +147,7 @@ def play_match(
                         raise Exception("Strategy returned invalid response!")
                 except Exception as e:
                     logger.error(
-                        f"An error occurred for function {player2.__name__}: {e}"
+                        f"An error occurred for function {player2.__name__}: {e} on round {i} against {player1.__name__}"
                     )
                     return None
 
