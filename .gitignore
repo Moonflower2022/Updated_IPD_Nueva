@@ -5,3 +5,4 @@ latest_raw_out.json
 service_account.json
 ipd.log
 blacklist.txt
+.DS_Store
