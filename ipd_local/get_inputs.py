@@ -110,7 +110,15 @@ def check_functions(
             globals()[function.__name__] = function
             try:
                 for test_case in test_cases:
-                    output = function(*test_case)
+                    my_moves = test_case[0]
+                    my_moves_copy = my_moves.copy()
+                    other_moves = test_case[1]
+                    other_moves_copy = other_moves.copy()
+                    output = function(my_moves, other_moves, test_case[2])
+                    if my_moves_copy != my_moves:
+                        raise Exception("my_moves was modified")
+                    if other_moves_copy != other_moves:
+                        raise Exception("other_moves was modified")
                     if not isinstance(output, bool):
                         raise Exception("function output was not bool")
 
