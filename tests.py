@@ -28,7 +28,7 @@ class TestSimulation(unittest.TestCase):
             get_scores([True, True, True], [False, False, False], *payoffs), (27.0, 0.0)
         )
 
-    def test_play_match(self):
+    def test_play_match_no_noise(self):
         self.assertEqual(
             play_match(
                 pack_functions((cheat, cooperate)),
@@ -36,7 +36,19 @@ class TestSimulation(unittest.TestCase):
                 rounds=150,
                 num_noise_games_to_avg=10,
             ),
-            list(get_scores([True] * 150, [False] * 150)),
+            get_scores([True] * 150, [False] * 150),
+        )
+    
+    def test_play_match_noise(self):
+        self.assertEqual(
+            play_match(
+                pack_functions((cheat, cooperate)),
+                noise=True,
+                noise_level=0.1,
+                rounds=150,
+                num_noise_games_to_avg=10,
+            ),
+            get_scores([True] * 150, [False] * 150),
         )
 
     def test_run_simulation(self):
@@ -48,7 +60,7 @@ class TestSimulation(unittest.TestCase):
                 num_noise_games_to_avg=50,
             )
 
-        self.assertEqual(simulation_result["cheat"]["cooperate"], [90.0, 0.0])
+        self.assertEqual(simulation_result["cheat"]["cooperate"], (90.0, 0.0))
 
 
 if __name__ == "__main__":

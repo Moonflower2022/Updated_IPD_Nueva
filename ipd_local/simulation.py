@@ -14,6 +14,7 @@ from collections import defaultdict
 
 import random
 import math
+import numpy as np
 
 # ↑ this seciton of imports is pretty important, a lot 
 # of functions use these modules without importing it 
@@ -56,7 +57,7 @@ def get_scores(
     loser: int = POINTS_DIFFERENT_LOSER,
     winner: int = POINTS_DIFFERENT_WINNER,
     both_rat: int = POINTS_BOTH_RAT,
-) -> List[float]:
+) -> Tuple[float]:
     """
     Calculates the points each player has given their set of moves.
 
@@ -112,9 +113,9 @@ def play_match(
     globals()[player1.__name__] = player1
     globals()[player2.__name__] = player2
 
-    games = []
+    games = np.zeros((num_noise_games_to_avg if noise else 1, 2))
     with suppress_output():
-        for _ in range(num_noise_games_to_avg if noise else 1):
+        for game_num in range(num_noise_games_to_avg if noise else 1):
             player1moves = []
             player2moves = []
             player1percieved = []
@@ -167,16 +168,13 @@ def play_match(
             if len(player1moves) != rounds or len(player2moves) != rounds:
                 return None
 
-            games.append(get_scores(player1moves, player2moves))
+            games[game_num] = get_scores(player1moves, player2moves)
     if player1.__name__ in globals():
         del globals()[player1.__name__]
     if player2.__name__ in globals():
         del globals()[player2.__name__]
 
-    return [
-        sum([game[0] for game in games]) / (num_noise_games_to_avg if noise else 1),
-        sum([game[1] for game in games]) / (num_noise_games_to_avg if noise else 1),
-    ]
+    return tuple(np.mean(games, axis=0).tolist())
 
 
 def run_simulation(
@@ -236,5 +234,5 @@ def run_simulation(
         if match_result == None:
             continue
         output[matchup[0].__name__][matchup[1].__name__] = match_result
-        output[matchup[1].__name__][matchup[0].__name__] = list(reversed(match_result))
+        output[matchup[1].__name__][matchup[0].__name__] = reversed(match_result)
     return output
