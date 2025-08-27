@@ -7,7 +7,10 @@ from ipd_local.get_inputs import get_spreadsheet_data, get_and_load_functions
 from ipd_local.output_locations import *
 from ipd_local.output import *
 from ipd_local.default_strategies import all_default_functions
+from ipd_local.descriptor import describe_strategy
+from ipd_local.utils import clean_json_like, recover_summary_fields
 
+from tqdm import tqdm
 import json
 from loguru import logger
 import sys
@@ -26,7 +29,7 @@ if __name__ == "__main__":
     logger.info("Starting!")
 
     data = get_spreadsheet_data(INPUT_SHEET_NAME, TAB_NAME)
-    imported_strategies = get_and_load_functions(data, cache=False)
+    imported_strategies, strategy_code_pairs = get_and_load_functions(data, cache=False)
 
     if INCLUDE_DEFAULTS:
         print(f"Added {len(all_default_functions)} default strategies.")
@@ -42,8 +45,8 @@ if __name__ == "__main__":
         num_noise_games_to_avg=NUM_NOISE_GAMES_TO_AVG,
     )
 
-    with open(RAW_OUT_LOCATION, "w") as fp:
-        fp.write(json.dumps(raw_data))
+    with open(RAW_OUT_LOCATION, "w") as output_file:
+        output_file.write(json.dumps(raw_data))
 
     specs = {
         "Noise": NOISE,
@@ -56,7 +59,31 @@ if __name__ == "__main__":
         "Points when both cooperate": POINTS_BOTH_COOPERATE,
         "Random Seed": RANDOM_SEED,
     }
-    with open("./latest_specs.json", "w") as fp:
-        fp.write(json.dumps(specs))
+    with open("./latest_specs.json", "w") as output_file:
+        output_file.write(json.dumps(specs))
+
+    print(f"describing {len(all_strategies)} strategies...")
+
+    if DESCRIBE_STRATEGIES:
+        strategy_to_description = {}
+        for strategy in tqdm(imported_strategies):
+            name = strategy.__name__
+            raw = describe_strategy(NOISE, strategy_code_pairs[name])
+            try:
+                strategy_to_description[name] = json.loads(raw)
+            except json.JSONDecodeError:
+                cleaned = clean_json_like(raw)
+                try:
+                    strategy_to_description[name] = json.loads(cleaned)
+                except Exception as e:
+                    rec = recover_summary_fields(raw)
+                    if rec:
+                        strategy_to_description[name] = rec
+                    else:
+                        logger.error(f"Failed to parse description for {name}: {e}; raw: {raw!r}")
+                        continue
+
+        with open(STRATEGY_DESCRIPTIONS_LOCATION, "w") as output_file:
+            output_file.write(json.dumps(strategy_to_description))
 
     update_sheet()

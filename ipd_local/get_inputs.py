@@ -3,7 +3,7 @@
 from .types import *
 from .game_specs import *
 from .output_locations import BLACKLIST_LOCATION
-from utils import suppress_output, get_length_no_whitespace_no_comments
+from .utils import suppress_output, get_length_no_whitespace_no_comments
 
 import gspread
 import requests
@@ -132,6 +132,35 @@ def check_functions(
 
     return good_functions, bad_function_results
 
+def get_strategy_code_pairs(code: str) -> Dict[str, str]:
+    """
+    Return a mapping from top-level function names to their source lines.
+    Includes decorators immediately preceding each function.
+    """
+    import ast
+
+    pairs: Dict[str, str] = {}
+    lines = code.splitlines(keepends=True)
+    try:
+        tree = ast.parse(code)
+    except Exception:
+        return pairs
+
+    for node in ast.walk(tree):
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            # Determine start line including decorators if present
+            decorator_lines = [d.lineno for d in getattr(node, "decorator_list", [])]
+            start_line = min(decorator_lines + [node.lineno]) if decorator_lines else node.lineno
+            end_line = getattr(node, "end_lineno", None)
+            if end_line is None:
+                # Fallback: if end_lineno missing, skip
+                continue
+            # Slice lines to include start..end (lineno is 1-based)
+            segment = lines[start_line - 1 : end_line]
+            pairs[node.name] = "".join(segment[1:])
+
+    return pairs
+
 def get_and_load_functions(
     data: List[List[str]],
     name_col: int = STUDENT_NAME_COL,
@@ -141,7 +170,7 @@ def get_and_load_functions(
     maximum_num_functions: int = MAXIMUM_NUM_FUNCTIONS,
     maximum_char_count: int = MAXIMUM_CHAR_COUNT,
     cache: bool = False,
-) -> List[Strategy]:
+) -> Tuple[List[Strategy], Dict[str, List[str]]]:
     """
     Downloads, loads, and filters all of the python code in the provided pastebin links.
     Filtering of functions is done via `check_functions_io`
@@ -172,6 +201,9 @@ def get_and_load_functions(
 
     strategies_namespace = {}
 
+    # Accumulate mapping from strategy name to its source lines across all submissions
+    all_strategy_code_pairs: Dict[str, str] = {}
+
     char_counts = []
 
     # iterate through all submissions (every student)
@@ -183,7 +215,7 @@ def get_and_load_functions(
         link = data[i][noise_col if noise else regular_col]
 
         # HACK reports a false error if the pastebin is empty
-        # because empty strings are 
+        # because empty strings are falsey
         
         if not (code := get_pastebin(link, cache=cache)):
             logger.error(f"Could not parse pastebin link for {data[i][name_col]}!")
@@ -198,6 +230,14 @@ def get_and_load_functions(
             )
             continue
 
+        # Collect source code by function name for later reporting
+        try:
+            pairs = get_strategy_code_pairs(code)
+            for fname, src_lines in pairs.items():
+                all_strategy_code_pairs[fname] = src_lines
+        except Exception as e:
+            logger.error(f"Failed to parse strategy-code pairs for {data[i][name_col]}: {str(e)}")
+
         char_count = get_length_no_whitespace_no_comments(code)
         char_counts.append(char_count)
 
@@ -209,9 +249,8 @@ def get_and_load_functions(
             continue
 
 
-        # oh boy here we go
         try:
-            
+            # oh boy here we go
             exec(code, strategies_namespace)
         except Exception as error:
             num_erroneous_pastebins += 1
@@ -260,10 +299,11 @@ def get_and_load_functions(
     print(f"Loaded {len(good_functions)} good functions.")
 
     print("Number of characters (no whitespace or comments)")
-    print("std dev:", statistics.stdev(char_counts))
+    if len(char_counts) > 1:
+        print("std dev:", statistics.stdev(char_counts))
     print("mean:", statistics.mean(char_counts))
     print("q1, q2, q3:", statistics.quantiles(char_counts))
     print("min:", min(char_counts))
     print("max:", max(char_counts))
 
-    return good_functions
+    return good_functions, all_strategy_code_pairs

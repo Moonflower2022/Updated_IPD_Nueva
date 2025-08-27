@@ -3,7 +3,7 @@
 from random import randint
 
 # simulation specs
-NOISE = False  # whether or not this tournament has noise
+NOISE = True  # whether or not this tournament has noise
 NOISE_LEVEL = 0.1  # percentage noise; only used if NOISE is set to True
 NUM_NOISE_GAMES_TO_AVG = 50  # number of noise games to play and average (only if noise is true)
 
@@ -27,6 +27,9 @@ INCLUDE_DEFAULTS = True
 # however, it will cause problems if functions that are supposed to be blacklisted are not.
 # thus, only set this variable to false if you are confident there has been no changes made to the submission sheet
 RELOAD_BLACKLIST = True
+
+# whether or not to describe strategies
+DESCRIBE_STRATEGIES = True
 
 # names for input and output sheets
 INPUT_SHEET_NAME = "IPD Player Strategies" # "Copy of IPD 2024 Strategy Submissions (Responses)"

@@ -2,7 +2,9 @@
 cache
 latest_specs.json
 latest_raw_out.json
+latest_strategy_descriptions.json
 service_account.json
 ipd.log
 blacklist.txt
+successful_blocks.txt
 .DS_Store

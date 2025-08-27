@@ -17,3 +17,6 @@ PROBLEMS_LOG_LOCATION = "./ipd.log"
 # list of functions that have issues
 # refreshed when simulation is run with RELOAD_BLACKLIST = True --> list of all the functions that we know are faulty
 BLACKLIST_LOCATION = "./blacklist.txt"
+
+# json file of the descriptions of the strategies
+STRATEGY_DESCRIPTIONS_LOCATION = "./latest_strategy_descriptions.json"

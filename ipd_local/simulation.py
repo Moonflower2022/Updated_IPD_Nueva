@@ -3,7 +3,7 @@
 from .types import *
 from .game_specs import *
 from .output_locations import *
-from utils import suppress_output
+from .utils import suppress_output
 
 from tqdm import tqdm
 from functools import partial
@@ -204,7 +204,7 @@ def run_simulation(
     ```
     """
     matchups = []
-    print(f"Running simulation with {len(strats)} strategies and {f'A Noise level of {NOISE_LEVEL}' if noise else "No Noise"}.")
+    print(f"Running simulation with {len(strats)} strategies and {f'A Noise level of {NOISE_LEVEL} averaged over {num_noise_games_to_avg} games' if noise else "No Noise"}.")
     for i, p1 in enumerate(strats):
         for j, p2 in enumerate(strats):
             if j <= i:
@@ -234,5 +234,5 @@ def run_simulation(
         if match_result == None:
             continue
         output[matchup[0].__name__][matchup[1].__name__] = match_result
-        output[matchup[1].__name__][matchup[0].__name__] = reversed(match_result)
+        output[matchup[1].__name__][matchup[0].__name__] = list(reversed(match_result))
     return output
