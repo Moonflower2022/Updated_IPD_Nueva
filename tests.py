@@ -84,9 +84,9 @@ class TestGetStrategyCodePairs(unittest.TestCase):
         self.assertEqual(
             get_strategy_code_pairs(test_code),
             {
-                "a": "def a(aoresnt):\n    return 1\n",
-                "b": "def b(arosent, aoresnt, arstoenars: int) -> int:\n    \"aiernst\"\n",
-                "c": "def c():\n    pass",
+                "a": "    return 1\n",
+                "b": "    \"aiernst\"\n",
+                "c": "    pass",
             },
         )
 
