@@ -22,10 +22,10 @@ def get_client():
 
 def get_response(client, chat_history: List[Dict[str, str]]) -> str:
     completion = client.chat.completions.create(
-        model="nvidia/llama-3.1-nemotron-nano-vl-8b-v1",
+        model="meta/llama-3.1-70b-instruct",
         messages=chat_history,
-        temperature=1.00,
-        top_p=0.01,
+        temperature=0.2,
+        top_p=0.7,
         max_tokens=1024,
         extra_body={"nvext": {"guided_repsonse": {
           "name": "summary_response",
