@@ -83,7 +83,7 @@ if __name__ == "__main__":
                         logger.error(f"Failed to parse description for {name}: {e}; raw: {raw!r}")
                         continue
 
-        with open(STRATEGY_DESCRIPTIONS_LOCATION, "w") as output_file:
-            output_file.write(json.dumps(strategy_to_description))
+            with open(STRATEGY_DESCRIPTIONS_LOCATION, "w") as output_file:
+                output_file.write(json.dumps(strategy_to_description))
 
     update_sheet()
