@@ -6,6 +6,7 @@ Concrete, mechanistic, parameterized.
 Name thresholds, counters, timers, probabilities.
 NO FLUFF, MAKE SURE TO JAM WITH INFO AND BE DESCRIPTIVE.
 BANNED: often, usually, generally, tends, might, could, somewhat, kind of.
+remember that returning "False" means "cooperate" and returning "True" means "defect"
 
 # FORMAT
 Format exactly:
@@ -63,8 +64,8 @@ instructions:
 ## output: 
 
 {{
- "summary5": "Pavlov exploiting alternators forgiveness",
- "summary40": "Cooperates initially. After mutual betrayal or opponent betrayal: cooperate. After mutual cooperation or self betrayal: betray. Detects eight-round alternating patterns, exploits five-round cooperation/betrayal streaks. Resets peace against tit-for-two-tats using three consecutive cooperations. Nice, retaliating, moderately forgiving, exploitative."
+  "summary5":"Pattern-detecting exploitative conditional cooperator", 
+  "summary40":"Starts cooperating, detects alternator patterns triggering defection, identifies Tit-for-Two-Tats resetting with three cooperations, punishes five consecutive moves, retaliates after exploited, cooperates after mutual defection, nice initially, retaliating, somewhat forgiving, highly exploitative against predictable opponents, handles noise forgiving."
 }}
 
 # TASK
