@@ -199,7 +199,7 @@ def get_and_load_functions(
     num_character_overloaded_pastebins = 0
     num_blocked_pastebins = 0
 
-    strategies_namespace = {}
+    strategies_namespace = {"random": random, "math": math}
 
     # Accumulate mapping from strategy name to its source lines across all submissions
     all_strategy_code_pairs: Dict[str, str] = {}
