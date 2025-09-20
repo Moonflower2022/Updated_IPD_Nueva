@@ -3,7 +3,7 @@
 from .types import *
 from .game_specs import *
 from .output_locations import *
-from .utils import suppress_output
+from .utils import suppress_output, check_type
 
 from tqdm import tqdm
 from functools import partial
@@ -12,14 +12,15 @@ import multiprocessing as mp
 import marshal
 from collections import defaultdict
 
+# ⬇️ the below section of imports is pretty important, a lot 
+# of functions use these modules without importing it 
+# in their own code; without the imports, they will not 
+# run
+
 import random
 import math
 import numpy as np
 
-# ↑ this seciton of imports is pretty important, a lot 
-# of functions use these modules without importing it 
-# in their own code; without the imports, they will not 
-# run
 
 def pack_functions(
     functions: Tuple[Callable[..., Any], Callable[..., Any]]
@@ -94,6 +95,7 @@ def play_match(
     noise_level: float = NOISE_LEVEL,
     rounds: int = ROUNDS,
     num_noise_games_to_avg: int = NUM_NOISE_GAMES_TO_AVG,
+    random_seed: int = RANDOM_SEED
 ) -> Optional[List[float]]:
     """
     Plays a match of Iterated Prisoner's Dilemma between two players.
@@ -109,6 +111,10 @@ def play_match(
 
     Returns: a 2-element list of their scores.
     """
+
+    np.random.seed(random_seed)
+    random.seed(random_seed)
+
     player1, player2 = unpack_functions(bytecode)
     globals()[player1.__name__] = player1
     globals()[player2.__name__] = player2
@@ -120,35 +126,51 @@ def play_match(
             player2moves = []
             player1percieved = []
             player2percieved = []
+            player1currentreturnedmoves = []
+            player2currentreturnedmoves = []
 
             for i in range(rounds):
                 try:
-                    player1move = player1(
-                        player1moves,
-                        player2percieved,
-                        i,
-                    )
+                    if player1currentreturnedmoves:
+                        player1move = player1currentreturnedmoves.pop(0)
+                    else:
+                        player1move = player1(
+                            player1moves.copy(),
+                            player2percieved.copy(),
+                            i,
+                        )
+                        if check_type(player1move, list[bool]):
+                            player1currentreturnedmoves = player1move.copy()
+                            player1move = player1currentreturnedmoves.pop(0)
+
 
                     if not isinstance(player1move, bool):
                         raise Exception("Strategy returned invalid response!")
                 except Exception as e:
                     logger.error(
-                        f"An error occurred for function {player1.__name__}: {e} on round {i} against {player2.__name__}"
+                        f"An error occurred for function {player1.__name__}: \"{e}\" on round {i} against {player2.__name__}"
                     )
                     return None
 
                 try:
-                    player2move = player2(
-                        player2moves,
-                        player1percieved,
-                        i,
-                    )
+                    if player2currentreturnedmoves:
+                        player2move = player2currentreturnedmoves.pop(0)
+                    else:
+                        
+                        player2move = player2(
+                            player2moves.copy(),
+                            player1percieved.copy(),
+                            i,
+                        )
+                        if check_type(player2move, list[bool]):
+                            player2currentreturnedmoves = player2move.copy()
+                            player2move = player2currentreturnedmoves.pop(0)
 
                     if not isinstance(player2move, bool):
                         raise Exception("Strategy returned invalid response!")
                 except Exception as e:
                     logger.error(
-                        f"An error occurred for function {player2.__name__}: {e} on round {i} against {player1.__name__}"
+                        f"An error occurred for function {player2.__name__}: \"{e}\" on round {i} against {player1.__name__}"
                     )
                     return None
 
@@ -183,6 +205,7 @@ def run_simulation(
     noise_level: float = NOISE_LEVEL,
     rounds: int = ROUNDS,
     num_noise_games_to_avg: int = NUM_NOISE_GAMES_TO_AVG,
+    random_seed: int = RANDOM_SEED,
 ) -> Dict[str, Dict[str, List[int]]]:
     """
     Runs the full IPD simulation.
@@ -217,6 +240,7 @@ def run_simulation(
             noise_level=noise_level,
             rounds=rounds,
             num_noise_games_to_avg=num_noise_games_to_avg,
+            random_seed=random_seed,
         )
 
         result = list(

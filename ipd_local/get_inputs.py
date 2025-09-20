@@ -3,7 +3,7 @@
 from .types import *
 from .game_specs import *
 from .output_locations import BLACKLIST_LOCATION
-from .utils import suppress_output, get_length_no_whitespace_no_comments
+from .utils import suppress_output, get_length_no_whitespace_no_comments, check_type
 
 import gspread
 import requests
@@ -119,8 +119,8 @@ def check_functions(
                         raise Exception("my_moves was modified")
                     if other_moves_copy != other_moves:
                         raise Exception("other_moves was modified")
-                    if not isinstance(output, bool):
-                        raise Exception("function output was not bool")
+                    if not (isinstance(output, bool) or check_type(output, list[bool])):
+                        raise Exception("function output was not bool or list[bool]")
 
                 good_functions.append(function)
             except Exception as e:

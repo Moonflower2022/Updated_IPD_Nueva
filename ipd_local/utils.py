@@ -1,6 +1,7 @@
 import sys
 import os
 import re
+from typing import get_origin
 
 def clean_json_like(s: str) -> str:
     s = s.strip()
@@ -56,3 +57,13 @@ def get_length_no_whitespace_no_comments(code):
         else:
             length += get_length_no_whitespace(line)
     return length
+
+
+def check_type(obj, expected_type):
+    origin = get_origin(expected_type)
+    if origin is None:
+        # Not a generic type
+        return isinstance(obj, expected_type)
+    else:
+        # Check against the origin type
+        return isinstance(obj, origin)
