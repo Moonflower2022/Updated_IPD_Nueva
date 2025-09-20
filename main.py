@@ -19,7 +19,6 @@ import random
 import numpy as np
 
 if RANDOM_SEED:
-    print(f"setting random seed to {RANDOM_SEED}")
     random.seed(RANDOM_SEED)
     np.random.seed(RANDOM_SEED)
 
@@ -43,6 +42,7 @@ if __name__ == "__main__":
         noise_level=NOISE_LEVEL,
         rounds=ROUNDS,
         num_noise_games_to_avg=NUM_NOISE_GAMES_TO_AVG,
+        random_seed=RANDOM_SEED
     )
 
     with open(RAW_OUT_LOCATION, "w") as output_file:
@@ -68,20 +68,8 @@ if __name__ == "__main__":
         strategy_to_description = {}
         for strategy in tqdm(imported_strategies):
             name = strategy.__name__
-            raw = describe_strategy(NOISE, strategy_code_pairs[name])
-            try:
-                strategy_to_description[name] = json.loads(raw)
-            except json.JSONDecodeError:
-                cleaned = clean_json_like(raw)
-                try:
-                    strategy_to_description[name] = json.loads(cleaned)
-                except Exception as e:
-                    rec = recover_summary_fields(raw)
-                    if rec:
-                        strategy_to_description[name] = rec
-                    else:
-                        logger.error(f"Failed to parse description for {name}: {e}; raw: {raw!r}")
-                        continue
+            description = describe_strategy(NOISE, strategy_code_pairs[name])
+            strategy_to_description[name] = description
 
             with open(STRATEGY_DESCRIPTIONS_LOCATION, "w") as output_file:
                 output_file.write(json.dumps(strategy_to_description))

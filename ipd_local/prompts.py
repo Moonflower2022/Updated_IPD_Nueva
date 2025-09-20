@@ -6,15 +6,9 @@ Concrete, mechanistic, parameterized.
 Name thresholds, counters, timers, probabilities.
 NO FLUFF, MAKE SURE TO JAM WITH INFO AND BE DESCRIPTIVE.
 BANNED: often, usually, generally, tends, might, could, somewhat, kind of.
-remember that returning "False" means "cooperate" and returning "True" means "defect"
+IMPORTANT: REMEMBER that returning "False" means "cooperate" and returning "True" means "defect"
 
-# FORMAT
-Format exactly:
-{{"summary5":"...", "summary40":"..."}}
-
-instructions:
-- summary5: EXACTLY 5 words, no conjunctions or prepositions, make it as descriptive as possible.
-- summary40: EXACTLY 40 words, jam pack with information, maintain the same structure of
+- return EXACTLY 40 words, jam pack with information, maintain the same structure of
   - logic of the strategy (what does it start with, what does it do after)
   - archetype of the strategy
   - how it handles certain kinds of opponents that are worthy of note
@@ -63,10 +57,7 @@ instructions:
 
 ## output: 
 
-{{
-  "summary5":"Pattern-detecting exploitative conditional cooperator", 
-  "summary40":"Starts cooperating, detects alternator patterns triggering defection, identifies Tit-for-Two-Tats resetting with three cooperations, punishes five consecutive moves, retaliates after exploited, cooperates after mutual defection, nice initially, retaliating, somewhat forgiving, highly exploitative against predictable opponents, handles noise forgiving."
-}}
+Starts cooperating, detects alternator patterns triggering defection, identifies Tit-for-Two-Tats resetting with three cooperations, punishes five consecutive moves, retaliates after exploited, cooperates after mutual defection, nice initially, retaliating, somewhat forgiving, highly exploitative against predictable opponents, handles noise forgiving.
 
 # TASK
 Now summarize the following strategy:
