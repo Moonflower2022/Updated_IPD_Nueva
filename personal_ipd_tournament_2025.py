@@ -78,14 +78,14 @@ def play_match(player1, player2, blindness, payoff_dict):
             player1move = player1currentreturnedmoves.pop(0)
         else:
             player1move = player1(
-                player1TrueMoves, player2ObsMoves, i
+                player1TrueMoves.copy(), player2ObsMoves.copy(), i
             )
 
         if player2currentreturnedmoves:
             player2move = player2currentreturnedmoves.pop(0)
         else:
             player2move = player2(
-                player2TrueMoves, player1ObsMoves, i
+                player2TrueMoves.copy(), player1ObsMoves.copy(), i
             )
 
         if not (type(player1move) is bool or (type(player1move) is list and len(player1move) > 0 and type(player1move[0]) is bool)):
@@ -433,7 +433,7 @@ display_matchup_observed_history(data, nuke_for_five_tats, alternate_every_five,
 """## Run With Noise"""
 
 # input variables
-funcs = [rat, silent, rand, kinda_random, tit_for_tat, tit_for_two_tats, nuke_for_tat, nuke_for_two_tats, nuke_for_five_tats, get_angry_after_twenty, cooperate_at_multiples_of_three, alternate_every_five, opposite_of_last]
+funcs = [rat, silent, rand, kinda_random, tit_for_tat, tit_for_two_tats, nuke_for_tat, nuke_for_two_tats, nuke_for_five_tats, get_angry_after_twenty, cooperate_at_multiples_of_three, alternate_every_five, suspicious_tit_for_tat]
 rounds = 150
 blindness = [0.1, 0.1]
 num_rounds_to_avg = 2
