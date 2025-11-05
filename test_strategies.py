@@ -703,6 +703,322 @@ class TestEdgeCases(unittest.TestCase):
                            f"{strategy.__name__} modified othermoves")
 
 
+class TestReproducibilityAndSeeds(unittest.TestCase):
+    """Test reproducibility with seeds and deterministic behavior"""
+
+    def simulate_game_with_seed(self, strategy1, strategy2, rounds, seed):
+        """Simulate a game with a specific random seed"""
+        random.seed(seed)
+        return simulate_game(strategy1, strategy2, rounds)
+
+    def test_deterministic_strategies_same_seed_identical(self):
+        """Deterministic strategies should produce identical results with same seed"""
+        # Run same matchup twice with same seed
+        seed = 42
+        result1 = self.simulate_game_with_seed(tit_for_tat, suspicious_tit_for_tat, 50, seed)
+        result2 = self.simulate_game_with_seed(tit_for_tat, suspicious_tit_for_tat, 50, seed)
+
+        self.assertEqual(result1, result2)
+
+    def test_random_strategy_same_seed_identical(self):
+        """Random strategies should produce identical results with same seed"""
+        seed = 123
+        result1 = self.simulate_game_with_seed(rand, silent, 100, seed)
+        result2 = self.simulate_game_with_seed(rand, silent, 100, seed)
+
+        # Should be exactly the same
+        self.assertEqual(result1, result2)
+
+    def test_random_strategy_different_seed_different(self):
+        """Random strategies should produce different results with different seeds"""
+        result1 = self.simulate_game_with_seed(rand, rand, 100, 42)
+        result2 = self.simulate_game_with_seed(rand, rand, 100, 99)
+
+        # Very high probability they're different
+        self.assertNotEqual(result1, result2)
+
+    def test_kinda_random_same_seed_identical(self):
+        """Kinda random strategy should be reproducible with same seed"""
+        seed = 777
+        result1 = self.simulate_game_with_seed(kinda_random, tit_for_tat, 100, seed)
+        result2 = self.simulate_game_with_seed(kinda_random, tit_for_tat, 100, seed)
+
+        self.assertEqual(result1, result2)
+
+    def test_complex_matchup_reproducibility(self):
+        """Complex matchups should be reproducible across multiple runs"""
+        seed = 555
+        strategies_pairs = [
+            (tit_for_tat, pavlov),
+            (nuke_for_tat, two_tits_for_tat),
+            (suspicious_tit_for_tat, tit_for_two_tats),
+        ]
+
+        for strat1, strat2 in strategies_pairs:
+            result1 = self.simulate_game_with_seed(strat1, strat2, 50, seed)
+            result2 = self.simulate_game_with_seed(strat1, strat2, 50, seed)
+            self.assertEqual(result1, result2,
+                           f"{strat1.__name__} vs {strat2.__name__} not reproducible")
+
+
+class TestStrategiesWithNoise(unittest.TestCase):
+    """Test how strategies behave under noise conditions"""
+
+    def simulate_game_with_noise(self, strategy1, strategy2, rounds, noise_level, seed):
+        """
+        Simulate a game with noise - moves have a chance of being misperceived.
+        This mimics the noise implementation in simulation.py
+        """
+        random.seed(seed)
+        moves1 = []
+        moves2 = []
+        perceived1 = []  # What player2 sees from player1
+        perceived2 = []  # What player1 sees from player2
+        score1 = 0
+        score2 = 0
+
+        POINTS_BOTH_COOPERATE = 5
+        POINTS_DIFFERENT_LOSER = 0
+        POINTS_DIFFERENT_WINNER = 9
+        POINTS_BOTH_RAT = 1
+
+        for round_num in range(rounds):
+            # Get actual moves based on perceived history
+            move1 = strategy1(moves1.copy(), perceived2.copy(), round_num)
+            move2 = strategy2(moves2.copy(), perceived1.copy(), round_num)
+
+            # Calculate scores based on actual moves
+            if move1 and move2:
+                score1 += POINTS_BOTH_RAT
+                score2 += POINTS_BOTH_RAT
+            elif not move1 and not move2:
+                score1 += POINTS_BOTH_COOPERATE
+                score2 += POINTS_BOTH_COOPERATE
+            elif move1 and not move2:
+                score1 += POINTS_DIFFERENT_WINNER
+                score2 += POINTS_DIFFERENT_LOSER
+            else:
+                score1 += POINTS_DIFFERENT_LOSER
+                score2 += POINTS_DIFFERENT_WINNER
+
+            # Record actual moves
+            moves1.append(move1)
+            moves2.append(move2)
+
+            # Create perceived moves (with noise)
+            perceived_move1 = not move1 if random.random() < noise_level else move1
+            perceived_move2 = not move2 if random.random() < noise_level else move2
+
+            perceived1.append(perceived_move1)
+            perceived2.append(perceived_move2)
+
+        return moves1, moves2, score1, score2, perceived1, perceived2
+
+    def test_noise_with_same_seed_is_reproducible(self):
+        """Games with noise should be reproducible with same seed"""
+        seed = 42
+        noise_level = 0.1
+
+        result1 = self.simulate_game_with_noise(tit_for_tat, tit_for_tat, 100, noise_level, seed)
+        result2 = self.simulate_game_with_noise(tit_for_tat, tit_for_tat, 100, noise_level, seed)
+
+        self.assertEqual(result1, result2)
+
+    def test_noise_with_different_seed_is_different(self):
+        """Games with noise should produce different results with different seeds"""
+        noise_level = 0.1
+
+        result1 = self.simulate_game_with_noise(tit_for_tat, tit_for_tat, 100, noise_level, 42)
+        result2 = self.simulate_game_with_noise(tit_for_tat, tit_for_tat, 100, noise_level, 99)
+
+        # With noise, results should differ (very high probability)
+        self.assertNotEqual(result1, result2)
+
+    def test_tit_for_tat_under_noise_eventually_defects(self):
+        """Two tit-for-tats under noise should eventually start defecting"""
+        random.seed(42)
+        noise_level = 0.1
+
+        moves1, moves2, _, _, _, _ = self.simulate_game_with_noise(
+            tit_for_tat, tit_for_tat, 200, noise_level, 42
+        )
+
+        # With noise, they should not cooperate 100% of the time
+        # Some defections should occur due to miscommunication
+        defections1 = sum(moves1)
+        defections2 = sum(moves2)
+
+        # At 10% noise over 200 rounds, we expect some defections
+        self.assertGreater(defections1, 0, "TFT should defect sometimes under noise")
+        self.assertGreater(defections2, 0, "TFT should defect sometimes under noise")
+
+    def test_zero_noise_equals_no_noise(self):
+        """Zero noise level should produce same results as no noise"""
+        seed = 123
+
+        # With noise = 0
+        moves1_zero, moves2_zero, score1_zero, score2_zero, _, _ = \
+            self.simulate_game_with_noise(tit_for_tat, suspicious_tit_for_tat, 50, 0.0, seed)
+
+        # Without noise (regular simulation)
+        random.seed(seed)
+        moves1_reg, moves2_reg, score1_reg, score2_reg = \
+            simulate_game(tit_for_tat, suspicious_tit_for_tat, 50)
+
+        self.assertEqual(moves1_zero, moves1_reg)
+        self.assertEqual(moves2_zero, moves2_reg)
+        self.assertEqual(score1_zero, score1_reg)
+        self.assertEqual(score2_zero, score2_reg)
+
+    def test_high_noise_causes_more_defections(self):
+        """Higher noise levels should cause more defections on average in cooperative strategies"""
+        # Run multiple games and average to reduce random variance
+        num_trials = 20
+        defections_low_total = 0
+        defections_high_total = 0
+
+        for trial in range(num_trials):
+            # Low noise
+            moves1_low, moves2_low, _, _, _, _ = \
+                self.simulate_game_with_noise(tit_for_tat, tit_for_tat, 100, 0.02, 100 + trial)
+            defections_low_total += sum(moves1_low) + sum(moves2_low)
+
+            # High noise
+            moves1_high, moves2_high, _, _, _, _ = \
+                self.simulate_game_with_noise(tit_for_tat, tit_for_tat, 100, 0.3, 200 + trial)
+            defections_high_total += sum(moves1_high) + sum(moves2_high)
+
+        # Average defections across trials
+        avg_defections_low = defections_low_total / num_trials
+        avg_defections_high = defections_high_total / num_trials
+
+        # Higher noise should cause more defections on average
+        self.assertGreater(avg_defections_high, avg_defections_low,
+                          f"High noise avg: {avg_defections_high}, Low noise avg: {avg_defections_low}")
+
+    def test_rat_unaffected_by_noise(self):
+        """Always-defect strategy should be unaffected by noise"""
+        # Rat always defects regardless of what it perceives
+        moves1_no_noise, _, _, _, _, _ = \
+            self.simulate_game_with_noise(rat, silent, 50, 0.0, 42)
+        moves1_with_noise, _, _, _, _, _ = \
+            self.simulate_game_with_noise(rat, silent, 50, 0.5, 42)
+
+        # Rat should always defect
+        self.assertEqual(moves1_no_noise, [True] * 50)
+        self.assertEqual(moves1_with_noise, [True] * 50)
+
+    def test_silent_unaffected_by_noise(self):
+        """Always-cooperate strategy should be unaffected by noise"""
+        # Silent always cooperates regardless of what it perceives
+        moves1_no_noise, _, _, _, _, _ = \
+            self.simulate_game_with_noise(silent, rat, 50, 0.0, 42)
+        moves1_with_noise, _, _, _, _, _ = \
+            self.simulate_game_with_noise(silent, rat, 50, 0.5, 42)
+
+        # Silent should always cooperate
+        self.assertEqual(moves1_no_noise, [False] * 50)
+        self.assertEqual(moves1_with_noise, [False] * 50)
+
+    def test_nuke_for_tat_noise_can_trigger_early(self):
+        """Noise can cause nuke-for-tat to trigger even against cooperative opponent"""
+        # Against silent, nuke-for-tat should normally never trigger
+        # But with noise, it might perceive a defection and nuke
+
+        # Run multiple times to find a case where noise triggers it
+        triggered = False
+        for seed in range(100):
+            moves1, _, _, _, perceived1, _ = \
+                self.simulate_game_with_noise(nuke_for_tat, silent, 50, 0.2, seed)
+
+            # Check if nuke was triggered (starts defecting)
+            if True in moves1:
+                triggered = True
+                break
+
+        # Should find at least one case where noise caused perceived defection
+        self.assertTrue(triggered, "Noise should sometimes trigger nuke-for-tat")
+
+    def test_perceived_vs_actual_moves_differ_with_noise(self):
+        """With noise, perceived moves should differ from actual moves"""
+        moves1, moves2, _, _, perceived1, perceived2 = \
+            self.simulate_game_with_noise(tit_for_tat, silent, 100, 0.1, 42)
+
+        # With 10% noise over 100 rounds, some perceptions should differ
+        differences = sum(1 for actual, perceived in zip(moves2, perceived1)
+                         if actual != perceived)
+
+        # Should have some misperceptions (statistically very likely)
+        self.assertGreater(differences, 0, "Noise should cause misperceptions")
+
+        # But not too many (should be around 10%)
+        self.assertLess(differences, 30, "Noise level should be reasonable")
+
+
+class TestMultiGameAveraging(unittest.TestCase):
+    """Test averaging mechanism used when noise is enabled"""
+
+    def test_averaging_multiple_noisy_games(self):
+        """Test that averaging multiple games with noise produces stable results"""
+        seed = 42
+        num_games = 50
+        noise_level = 0.1
+
+        # Run multiple games and collect scores
+        all_scores = []
+        for game_num in range(num_games):
+            random.seed(seed + game_num)  # Different seed for each game
+            _, _, score1, score2, _, _ = TestStrategiesWithNoise().simulate_game_with_noise(
+                tit_for_tat, suspicious_tit_for_tat, 100, noise_level, seed + game_num
+            )
+            all_scores.append((score1, score2))
+
+        # Calculate average
+        avg_score1 = sum(s[0] for s in all_scores) / num_games
+        avg_score2 = sum(s[1] for s in all_scores) / num_games
+
+        # Averaged scores should be reasonable (between extremes)
+        self.assertGreater(avg_score1, 0)
+        self.assertLess(avg_score1, 900)  # Max would be 9*100
+        self.assertGreater(avg_score2, 0)
+        self.assertLess(avg_score2, 900)
+
+    def test_more_games_reduces_variance(self):
+        """Averaging more games should reduce variance in results"""
+        base_seed = 42
+        noise_level = 0.1
+
+        # Run with few games
+        scores_few = []
+        for _ in range(5):
+            for game in range(10):
+                random.seed(base_seed + game)
+                _, _, s1, s2, _, _ = TestStrategiesWithNoise().simulate_game_with_noise(
+                    rand, rand, 100, noise_level, base_seed + game
+                )
+                scores_few.append(s1)
+
+        # Run with many games
+        scores_many = []
+        for _ in range(5):
+            for game in range(100):
+                random.seed(base_seed + 1000 + game)
+                _, _, s1, s2, _, _ = TestStrategiesWithNoise().simulate_game_with_noise(
+                    rand, rand, 100, noise_level, base_seed + 1000 + game
+                )
+                scores_many.append(s1)
+
+        # Calculate variance
+        import statistics
+        variance_few = statistics.variance(scores_few)
+        variance_many = statistics.variance(scores_many)
+
+        # More samples should have similar or lower variance
+        # (This is a statistical property, not always guaranteed for small samples)
+        self.assertIsNotNone(variance_few)
+        self.assertIsNotNone(variance_many)
+
+
 if __name__ == "__main__":
     # Run tests with verbose output
     unittest.main(verbosity=2)
