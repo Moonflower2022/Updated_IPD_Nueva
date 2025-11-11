@@ -178,12 +178,12 @@ def play_match(
                 player2moves.append(player2move)
                 player1percieved.append(
                     not player1move
-                    if NOISE and random.random() < noise_level
+                    if noise and random.random() < noise_level
                     else player1move
                 )
                 player2percieved.append(
                     not player2move
-                    if NOISE and random.random() < noise_level
+                    if noise and random.random() < noise_level
                     else player2move
                 )
 
@@ -259,5 +259,5 @@ def run_simulation(
         if match_result == None:
             continue
         output[matchup[0].__name__][matchup[1].__name__] = match_result
-        output[matchup[1].__name__][matchup[0].__name__] = list(reversed(match_result))
+        output[matchup[1].__name__][matchup[0].__name__] = tuple(reversed(match_result))
     return output
