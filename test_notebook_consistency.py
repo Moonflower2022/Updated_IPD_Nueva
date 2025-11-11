@@ -26,7 +26,7 @@ def test_missing_functions():
     # Load the notebook Python file
     try:
         notebook_module = load_python_file_as_module(
-            '/home/user/Updated_IPD_Nueva/personal_ipd_tournament_2025.py',
+            '/Users/hq/github_projects/Updated_IPD_Nueva/personal_ipd_tournament_2025.py',
             'notebook_module'
         )
         print("✓ Successfully loaded personal_ipd_tournament_2025.py")

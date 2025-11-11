@@ -32,7 +32,7 @@ def test_reproducibility():
     try:
         # Load notebook module
         notebook = load_python_file_as_module(
-            '/home/user/Updated_IPD_Nueva/personal_ipd_tournament_2025.py',
+            '/Users/hq/github_projects/Updated_IPD_Nueva/personal_ipd_tournament_2025.py',
             'notebook_repro'
         )
 

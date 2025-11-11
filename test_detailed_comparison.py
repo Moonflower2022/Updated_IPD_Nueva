@@ -27,7 +27,7 @@ def load_notebook_quietly():
     with SuppressOutput():
         spec = importlib.util.spec_from_file_location(
             'notebook_quiet',
-            '/home/user/Updated_IPD_Nueva/personal_ipd_tournament_2025.py'
+            '/Users/hq/github_projects/Updated_IPD_Nueva/personal_ipd_tournament_2025.py'
         )
         module = importlib.util.module_from_spec(spec)
         sys.modules['notebook_quiet'] = module
