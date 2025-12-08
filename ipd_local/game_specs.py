@@ -43,3 +43,13 @@ REGULAR_STRAT_COL = 2
 NOISE_STRAT_COL = 3
 
 RANDOM_SEED = None
+
+import dotenv
+from pathlib import Path
+import os
+
+current_dir = Path(__file__).parent.parent
+dotenv_path = current_dir / '.env'
+dotenv.load_dotenv(dotenv_path)
+
+NVIDIA_API_KEY = os.getenv("NVIDIA_API_KEY")

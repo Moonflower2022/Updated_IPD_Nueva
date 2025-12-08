@@ -4,6 +4,8 @@ from pydantic import BaseModel
 
 from .prompts import single_strategy_prompt
 
+from .game_specs import NVIDIA_API_KEY
+
 class SummaryResponse(BaseModel):
     summary5: str
     summary40: str
@@ -17,7 +19,7 @@ def get_single_strategy_prompt(noise: bool, strategy_code: str) -> str:
 def get_client():
     return OpenAI(
         base_url="https://integrate.api.nvidia.com/v1",
-        api_key="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",
+        api_key=NVIDIA_API_KEY,
     )
 
 def get_response(client, chat_history: List[Dict[str, str]]) -> str:

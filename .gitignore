@@ -8,3 +8,4 @@ ipd.log
 blacklist.txt
 successful_blocks.txt
 .DS_Store
+.env
