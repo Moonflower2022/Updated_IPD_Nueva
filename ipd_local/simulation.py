@@ -140,6 +140,8 @@ def play_match(
                             i,
                         )
                         if check_type(player1move, list[bool]):
+                            if len(player1move) == 0:
+                                raise Exception("Strategy returned empty list!")
                             player1currentreturnedmoves = player1move.copy()
                             player1move = player1currentreturnedmoves.pop(0)
 
@@ -163,6 +165,8 @@ def play_match(
                             i,
                         )
                         if check_type(player2move, list[bool]):
+                            if len(player2move) == 0:
+                                raise Exception("Strategy returned empty list!")
                             player2currentreturnedmoves = player2move.copy()
                             player2move = player2currentreturnedmoves.pop(0)
 

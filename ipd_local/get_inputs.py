@@ -109,17 +109,31 @@ def check_functions(
         for function in functions:
             globals()[function.__name__] = function
             try:
+                queued_moves = []
                 for test_case in test_cases:
                     my_moves = test_case[0]
                     my_moves_copy = my_moves.copy()
                     other_moves = test_case[1]
                     other_moves_copy = other_moves.copy()
-                    output = function(my_moves, other_moves, test_case[2])
+
+                    if queued_moves:
+                        output = queued_moves.pop(0)
+                    else:
+                        output = function(my_moves, other_moves, test_case[2])
+
                     if my_moves_copy != my_moves:
                         raise Exception("my_moves was modified")
                     if other_moves_copy != other_moves:
                         raise Exception("other_moves was modified")
-                    if not (isinstance(output, bool) or check_type(output, list[bool])):
+
+                    if isinstance(output, bool):
+                        pass
+                    elif check_type(output, list[bool]):
+                        if len(output) == 0:
+                            raise Exception("function returned empty list")
+                        queued_moves.extend(output[1:])
+                        output = output[0]
+                    else:
                         raise Exception("function output was not bool or list[bool]")
 
                 good_functions.append(function)
