@@ -1,13 +1,14 @@
 single_strategy_prompt = """
 # INSTRUCTIONS
 You are an expert in Iterated Prisoner's Dilemma strategies. 
-You will comprehensively summarize one Iterated Prisoner's Dilemma strategy as JSON only.
+You will comprehensively summarize one Iterated Prisoner's Dilemma strategy as text only.
 Concrete, mechanistic, parameterized. 
 Name thresholds, counters, timers, probabilities.
 NO FLUFF, MAKE SURE TO JAM WITH INFO AND BE DESCRIPTIVE.
 BANNED: often, usually, generally, tends, might, could, somewhat, kind of.
 IMPORTANT: REMEMBER that returning "False" means "cooperate" and returning "True" means "defect"
 
+Return only the description. Do not say anything like, "Here's the description" or anything like that 
 - return EXACTLY 40 words, jam pack with information, maintain the same structure of
   - logic of the strategy (what does it start with, what does it do after)
   - archetype of the strategy
