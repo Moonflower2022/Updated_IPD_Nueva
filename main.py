@@ -61,9 +61,9 @@ if __name__ == "__main__":
     with open("./latest_specs.json", "w") as output_file:
         output_file.write(json.dumps(specs))
 
-    print(f"describing {len(all_strategies)} strategies...")
-
     if DESCRIBE_STRATEGIES:
+        print(f"describing {len(all_strategies)} strategies...")
+
         strategy_to_description = {}
         for strategy in tqdm(imported_strategies):
             name = strategy.__name__
