@@ -32,17 +32,17 @@ RELOAD_BLACKLIST = True
 DESCRIBE_STRATEGIES = True
 
 # names for input and output sheets
-INPUT_SHEET_NAME = "IPD Player Strategies" # "Copy of IPD 2024 Strategy Submissions (Responses)"
-TAB_NAME = "Form Responses 1"
-OUTPUT_SHEET_NAME = "IPD Latest Run Results"
+INPUT_SHEET_NAME = "IPD 2025 Strategy Submissions (Responses)" # "Copy of IPD 2024 Strategy Submissions (Responses)"
+TAB_NAME = "RUN 1"
+OUTPUT_SHEET_NAME = "IPD 2025 Latest Run Results"
 
 # the columns of the spreadsheet that correspond to the
 # student name, regular strategies, and noise strategies
-STUDENT_NAME_COL = 1
-REGULAR_STRAT_COL = 2
+STUDENT_NAME_COL = 2
+REGULAR_STRAT_COL = 4
 NOISE_STRAT_COL = 3
 
-RANDOM_SEED = None
+RANDOM_SEED = 42
 
 import dotenv
 from pathlib import Path
