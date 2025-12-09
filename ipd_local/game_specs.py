@@ -1,14 +1,19 @@
 """Specify global parameters in this submodule."""
 
-from random import randint
+import random
+
+RANDOM_SEED = 44
 
 # simulation specs
 NOISE = True  # whether or not this tournament has noise
 NOISE_LEVEL = 0.1  # percentage noise; only used if NOISE is set to True
-NUM_NOISE_GAMES_TO_AVG = 50  # number of noise games to play and average (only if noise is true)
+NUM_NOISE_GAMES_TO_AVG = 1000  # number of noise games to play and average (only if noise is true)
 
 # Random round range from 100 - 200
-ROUNDS = randint(100, 200)  # number of rounds each strategy plays against each other strategy
+MIN_ROUNDS = 100
+MAX_ROUNDS = 200
+random.seed(RANDOM_SEED)
+ROUNDS = [random.randint(MIN_ROUNDS, MAX_ROUNDS) for _ in range(NUM_NOISE_GAMES_TO_AVG)]  # number of rounds each strategy plays against each other strategy
 MAXIMUM_NUM_FUNCTIONS = 10 # change to a very large number if this restriction is not desired
 MAXIMUM_CHAR_COUNT = 5000 # change to a very large number if this restriction is not desired
 
@@ -29,7 +34,7 @@ INCLUDE_DEFAULTS = True
 RELOAD_BLACKLIST = True
 
 # whether or not to describe strategies
-DESCRIBE_STRATEGIES = True
+DESCRIBE_STRATEGIES = False
 
 # names for input and output sheets
 INPUT_SHEET_NAME = "IPD 2025 Strategy Submissions (Responses)" # "Copy of IPD 2024 Strategy Submissions (Responses)"

@@ -103,7 +103,7 @@ def check_functions(
     good_functions = []
     bad_function_results = []
 
-    test_cases = [[[True] * i, [False] * i, i] for i in range(0, ROUNDS)]
+    test_cases = [[[True] * i, [False] * i, i] for i in range(0, MAX_ROUNDS)]
 
     with suppress_output():
         for function in functions:

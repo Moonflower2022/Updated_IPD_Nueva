@@ -93,7 +93,7 @@ def play_match(
     bytecode: Tuple[bytes, bytes],
     noise: bool = NOISE,
     noise_level: float = NOISE_LEVEL,
-    rounds: int = ROUNDS,
+    rounds: List[int] = ROUNDS,
     num_noise_games_to_avg: int = NUM_NOISE_GAMES_TO_AVG,
     random_seed: int = RANDOM_SEED
 ) -> Optional[List[float]]:
@@ -104,7 +104,7 @@ def play_match(
     - `bytecode`: a tuple of the bytecode representations of the two players.
     - `noise`: whether or not noise is enabled.
     - `noise_level`: chance of miscommunicating (only takes affect if noise is on)
-    - `rounds`: the number of rounds for the game.
+    - `rounds`: the list of numbers of rounds for the game.
     - `noise_games_to_average`: the number of games to play before averaging results if noise is on.
 
     `noise`, `noise_level`, `rounds`, and `num_games` all default to the values specified in `game_specs.py`
@@ -129,7 +129,7 @@ def play_match(
             player1currentreturnedmoves = []
             player2currentreturnedmoves = []
 
-            for i in range(rounds):
+            for i in range(rounds[game_num]):
                 try:
                     if player1currentreturnedmoves:
                         player1move = player1currentreturnedmoves.pop(0)
@@ -191,7 +191,7 @@ def play_match(
                     else player2move
                 )
 
-            if len(player1moves) != rounds or len(player2moves) != rounds:
+            if len(player1moves) != rounds[game_num] or len(player2moves) != rounds[game_num]:
                 return None
 
             games[game_num] = get_scores(player1moves, player2moves)
@@ -207,7 +207,7 @@ def run_simulation(
     strats: List[Strategy],
     noise: bool = NOISE,
     noise_level: float = NOISE_LEVEL,
-    rounds: int = ROUNDS,
+    rounds: List[int] = ROUNDS,
     num_noise_games_to_avg: int = NUM_NOISE_GAMES_TO_AVG,
     random_seed: int = RANDOM_SEED,
 ) -> Dict[str, Dict[str, List[int]]]:
@@ -218,7 +218,7 @@ def run_simulation(
     - `strats`: a list of strategies to run in the tournament.
     - `noise`: whether or not noise is enabled.
     - `noise_level`: chance of miscommunicating (only takes affect if noise is on)
-    - `rounds`: the number of rounds for the game.
+    - `rounds`: the list of numbers of rounds for the game.
     - `noise_games_to_average`: the number of games to play before averaging results if noise is on.
 
     `noise`, `noise_level`, `rounds`, and `num_games` all default to the values specified in `game_specs.py`
