@@ -5,55 +5,55 @@ import random
 from .types import *
 
 
-def rat(mymoves: List[bool], othermoves: List[bool], currentRound: int) -> bool:
+def rat(my_moves: List[bool], other_moves: List[bool], current_round: int) -> bool:
     # Always Rats (returns True)
     return True
 
 
-def silent(mymoves: List[bool], othermoves: List[bool], currentRound: int) -> bool:
+def silent(my_moves: List[bool], other_moves: List[bool], current_round: int) -> bool:
     # Always stays silent (returns False)
     return False
 
 
-def rand(mymoves: List[bool], othermoves: List[bool], currentRound: int) -> bool:
+def rand(my_moves: List[bool], other_moves: List[bool], current_round: int) -> bool:
     return bool(random.getrandbits(1))
 
 
 def kinda_random(
-    mymoves: List[bool], othermoves: List[bool], currentRound: int
+    my_moves: List[bool], other_moves: List[bool], current_round: int
 ) -> bool:
     cheat_probability = 0.9
     return random.random() < cheat_probability
 
 
-def tit_for_tat(mymoves: List[bool], othermoves: List[bool], currentRound: int) -> bool:
-    if len(othermoves) == 0:
+def tit_for_tat(my_moves: List[bool], other_moves: List[bool], current_round: int) -> bool:
+    if len(other_moves) == 0:
         return False
-    return othermoves[-1]
+    return other_moves[-1]
 
 
 def tit_for_two_tats(
-    mymoves: List[bool], othermoves: List[bool], currentRound: int
+    my_moves: List[bool], other_moves: List[bool], current_round: int
 ) -> bool:
-    if len(othermoves) < 2:
+    if len(other_moves) < 2:
         return False
-    return othermoves[-1] and othermoves[-2]
+    return other_moves[-1] and other_moves[-2]
 
 
 def nuke_for_tat(
-    mymoves: List[bool], othermoves: List[bool], currentRound: int
+    my_moves: List[bool], other_moves: List[bool], current_round: int
 ) -> bool:
-    if len(othermoves) == 0:
+    if len(other_moves) == 0:
         return False
-    return True in othermoves
+    return True in other_moves
 
 
 def nuke_for_two_tats(
-    mymoves: List[bool], othermoves: List[bool], currentRound: int
+    my_moves: List[bool], other_moves: List[bool], current_round: int
 ) -> bool:
-    if len(othermoves) < 2:
+    if len(other_moves) < 2:
         return False
-    indices = [i for i, x in enumerate(othermoves) if x]
+    indices = [i for i, x in enumerate(other_moves) if x]
     for i in range(len(indices) - 1):
         if indices[i] == indices[i + 1] - 1:
             return True
@@ -61,27 +61,27 @@ def nuke_for_two_tats(
 
 
 def two_tits_for_tat(
-    mymoves: List[bool], othermoves: List[bool], currentRound: int
+    my_moves: List[bool], other_moves: List[bool], current_round: int
 ) -> bool:
-    if currentRound == 0:
+    if current_round == 0:
         return False
-    if (currentRound >= 1 and othermoves[-1]) or (currentRound >= 2 and othermoves[-2]):
+    if (current_round >= 1 and other_moves[-1]) or (current_round >= 2 and other_moves[-2]):
         return True
     return False
 
 
-def pavlov(mymoves: List[bool], othermoves: List[bool], currentRound: int) -> bool:
-    if currentRound == 0:
+def pavlov(my_moves: List[bool], other_moves: List[bool], current_round: int) -> bool:
+    if current_round == 0:
         return False
-    return not mymoves[-1] == othermoves[-1]
+    return not my_moves[-1] == other_moves[-1]
 
 
 def suspicious_tit_for_tat(
-    mymoves: List[bool], othermoves: List[bool], currentRound: int
+    my_moves: List[bool], other_moves: List[bool], current_round: int
 ) -> bool:
-    if currentRound == 0:
+    if current_round == 0:
         return True
-    return othermoves[-1]
+    return other_moves[-1]
 
 
 all_default_functions = [

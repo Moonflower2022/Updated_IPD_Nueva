@@ -47,8 +47,6 @@ STUDENT_NAME_COL = 2
 REGULAR_STRAT_COL = 4
 NOISE_STRAT_COL = 3
 
-RANDOM_SEED = 42
-
 import dotenv
 from pathlib import Path
 import os
